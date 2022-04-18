@@ -1,0 +1,24 @@
+multi gpu
+ok for testing
+CUDA_VISIBLE_DEVICES=0,1 ./scripts/dist_train.sh 2 options/train/PASR/train_PASR_div2k_Lx4.yml
+ok for running
+CUDA_VISIBLE_DEVICES=0,1 nohup ./scripts/dist_train.sh 2 options/train/PASR/train_PASR_div2k_Lx4.yml &
+
+
+single gpu
+ok for running
+PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="2" nohup python basicsr/train.py -opt options/train/PASR/train_PASR_div2k_Lx4.yml &
+
+ok for debuging
+PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="2" python basicsr/train.py -opt options/train/PASR/train_PASR_Lx2_realsr.yml --debug
+PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="2" python basicsr/train.py -opt options/train/PASR/train_PASR_div2k_Lx4.yml
+
+
+PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="0" nohup python basicsr/train.py -opt options/train/PASR/train_PASR_Lx2_drealsr.yml &
+PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="0" nohup python basicsr/train.py -opt options/train/PASR/train_PASR_Lx2_df2k.yml &
+
+# test
+experiments/PASR_Lx2_f256b32_RealSR_50k_B32G1_layer10_wandb_with_contrastive_lr_inter/models/net_g_500000.pth
+
+PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="2" nohup python basicsr/train.py -opt options/train/PASR/train_PASR_Lx4_realsr.yml &
+PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="1" python basicsr/train.py -opt options/train/PASR/train_PASR_Lx3_realsr.yml
