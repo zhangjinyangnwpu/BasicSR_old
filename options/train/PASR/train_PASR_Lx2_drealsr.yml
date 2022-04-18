@@ -1,0 +1,140 @@
+# general settings
+name: PASR_Lx2_f256b32_DRealSR_50k_B32G1_layer10_wandb_with_contrastive
+model_type: PASRModel
+scale: 2
+num_gpu: 1  # set num_gpu: 0 for cpu mode
+manual_seed: 10
+
+# dataset and data loader settings
+datasets:
+  train:
+    name: DRealSR
+    type: PairedImageDataset
+#    dataroot_gt: datasets/DIV2K/DIV2K_train_HR_sub
+#    dataroot_lq: datasets/DIV2K/DIV2K_train_LR_bicubic/X4_sub
+    # (for lmdb)
+#    dataroot_gt: datasets/DIV2K/DIV2K_train_HR_sub.lmdb
+#    dataroot_lq: datasets/DIV2K/DIV2K_train_LR_bicubic_X4_sub.lmdb
+    dataroot_gt: datasets/DRealSR/x2/Train_x2/train_HR.lmdb
+    dataroot_lq: datasets/DRealSR/x2/Train_x2/train_LR.lmdb
+    filename_tmpl: '{}'
+    io_backend:
+#      type: disk
+      # (for lmdb)
+      type: lmdb
+
+    gt_size: 96
+    use_hflip: true
+    use_rot: true
+
+    # data loader
+    use_shuffle: true
+    num_worker_per_gpu: 6
+    batch_size_per_gpu: 64
+    dataset_enlarge_ratio: 100
+    prefetch_mode: ~
+
+  val_0:
+    name: Set5
+    type: PairedImageDataset
+    dataroot_gt: datasets/Set5/GTmod12
+    dataroot_lq: datasets/Set5/LRbicx2
+    io_backend:
+      type: disk
+
+  val_1:
+    name: Set14
+    type: PairedImageDataset
+    dataroot_gt: datasets/Set14/GTmod12
+    dataroot_lq: datasets/Set14/LRbicx2
+    io_backend:
+      type: disk
+
+  val_2:
+    name: RealSR
+    type: PairedImageDataset
+    dataroot_gt: datasets/RealSR(V3)/All/Test/2
+    dataroot_lq: datasets/RealSR(V3)/All/Test/2
+    io_backend:
+      type: disk
+
+#  val_3:
+#    name: DRealSR
+#    type: PairedImageDataset
+#    dataroot_gt: datasets/DRealSR/x4/Test_x4/test_HR
+#    dataroot_lq: datasets/DRealSR/x4/Test_x4/test_LR
+#    io_backend:
+#      type: disk
+
+# network structures
+network_g:
+  type: PASR
+  input_channels: 3
+  output_channels: 3
+  scale: 2
+  num_layers: 10
+  img_range: 255.
+  rgb_mean: [ 0.4488, 0.4371, 0.4040 ]
+  use_mean: false
+  use_squeeze: false
+  fea_dim: 32
+
+# path
+path:
+#  pretrain_network_g: experiments/1_pretrained_models/PASR/net_g_15000.pth
+  pretrain_network_g: ~
+  strict_load_g: false
+  resume_state: ~
+
+# training settings
+train:
+  ema_decay: 0.999
+  optim_g:
+    type: Adam
+    lr: !!float 1e-4
+    weight_decay: 0
+    betas: [0.9, 0.99]
+
+  scheduler:
+    type: MultiStepLR
+    milestones: [ 250000, 400000, 450000, 475000 ]
+    gamma: 0.5
+
+  total_iter: 500000
+  warmup_iter: -1  # no warm up
+  contrastive_step: 0
+
+  # losses
+  pixel_opt:
+    type: SmoothL1Loss
+    loss_weight: 1.0
+    reduction: mean
+  contrastive_opt:
+    type: ContrastiveLoss
+    loss_weight: 1.0
+    reduction: mean
+
+# validation settings
+val:
+  val_freq: !!float 5e3
+  save_img: true
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 2
+      test_y_channel: true
+
+# logging settings
+logger:
+  print_freq: 100
+  save_checkpoint_freq: !!float 5e3
+  use_tb_logger: true
+  wandb:
+    project: ~
+    resume_id: ~
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29500

@@ -1,0 +1,79 @@
+name: PASR_Lx3_f256b32_RealSR_50k_B32G1_layer10_wandb_with_contrastive_based_x2
+model_type: SRModel
+scale: 3
+num_gpu: 1  # set num_gpu: 0 for cpu mode
+manual_seed: 0
+
+datasets:
+  #  test_1:  # the 1st test dataset
+  #    name: Set5
+  #    type: PairedImageDataset
+  #    dataroot_gt: datasets/Set5/GTmod12
+  #    dataroot_lq: datasets/Set5/LRbicx4
+  #    io_backend:
+  #      type: disk
+  #  test_2:  # the 2nd test dataset
+  #    name: Set14
+  #    type: PairedImageDataset
+  #    dataroot_gt: datasets/Set14/GTmod12
+  #    dataroot_lq: datasets/Set14/LRbicx4
+  #    io_backend:
+  #      type: disk
+  #
+  #  test_3:
+  #    name: div2k100
+  #    type: PairedImageDataset
+  #    dataroot_gt: ./datasets/DIV2K/DIV2K_valid_HR
+  #    dataroot_lq: ./datasets/DIV2K/DIV2K_valid_LR_bicubic/X4
+  #    filename_tmpl: '{}x4'
+  #    io_backend:
+  #      type: disk
+
+  test_4:
+    name: RealSR
+    type: PairedImageDataset
+    dataroot_gt: ./datasets/RealSR(V3)/All/Test/3
+    dataroot_lq: ./datasets/RealSR(V3)/All/Test/3
+    #    filename_tmpl: '{}x3'
+    io_backend:
+      type: disk
+
+#  test_5:
+#    name: DRealSR
+#    type: PairedImageDataset
+#    dataroot_gt: ./datasets/DRealSR/x4/test_demo/hr
+#    dataroot_lq: ./datasets/DRealSR/x4/test_demo/lr
+#    #    filename_tmpl: '{}x4'
+#    io_backend:
+#      type: disk
+
+# network structures
+network_g:
+  type: PASR
+  input_channels: 3
+  output_channels: 3
+  scale: 3
+  num_layers: 10
+  use_squeeze: false
+  fea_dim: 32
+
+
+# path
+path:
+  pretrain_network_g: experiments/PASR_Lx3_f256b32_RealSR_50k_B32G1_layer10_wandb_with_contrastive_based_x2/models/net_g_240000.pth
+  strict_load_g: true
+
+# validation settings
+val:
+  save_img: true
+  suffix: ~  # add suffix to saved images, if None, use exp name
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 4
+      test_y_channel: true
+    ssim:
+      type: calculate_ssim
+      crop_border: 4
+      test_y_channel: true
