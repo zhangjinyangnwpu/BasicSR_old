@@ -13,7 +13,7 @@ from basicsr.utils.registry import MODEL_REGISTRY
 from .base_model import BaseModel
 from basicsr.utils import SRMDPreprocessing
 
-
+# add test
 @MODEL_REGISTRY.register()
 class PASRModel(BaseModel):
     """Base SR model for single image super-resolution."""
