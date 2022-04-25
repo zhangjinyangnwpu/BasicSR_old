@@ -145,10 +145,10 @@ class BiFPNBlockFusion(nn.Module):
         self.p3_td = Block_Type(feature_size*2, feature_size)
         self.p4_td = Block_Type(feature_size*2, feature_size)
 
-        self.p2_out = Block_Type(feature_size*3, feature_size)
-        self.p3_out = Block_Type(feature_size*3, feature_size)
-        self.p4_out = Block_Type(feature_size*3, feature_size)
-        self.p5_out = Block_Type(feature_size*3, feature_size)
+        self.p2_out = Block_Type(feature_size*2, feature_size)
+        self.p3_out = Block_Type(feature_size*2, feature_size)
+        self.p4_out = Block_Type(feature_size*2, feature_size)
+        self.p5_out = Block_Type(feature_size*2, feature_size)
 
 
     def forward(self, inputs):
@@ -162,10 +162,10 @@ class BiFPNBlockFusion(nn.Module):
 
         # Calculate Bottom-Up Pathway
         level1_out = level1_td
-        level2_out = self.p2_out(torch.cat([level2, level2_td,level1_out],1))
-        level3_out = self.p3_out(torch.cat([level3, level3_td,level2_out],1))
-        level4_out = self.p4_out(torch.cat([level4, level4_td,level3_out],1))
-        level5_out = self.p5_out(torch.cat([level5, level5_td,level4_out],1))
+        level2_out = self.p2_out(torch.cat([level2_td,level1_out],1))
+        level3_out = self.p3_out(torch.cat([level3_td,level2_out],1))
+        level4_out = self.p4_out(torch.cat([level4_td,level3_out],1))
+        level5_out = self.p5_out(torch.cat([level5_td,level4_out],1))
 
         # block residual
         level1_out += level1
@@ -241,11 +241,11 @@ class PASR(nn.Module):
 
 
 def main():
-    img = torch.randn((1,3,192,192))
-    net = PASR(input_channels=3, output_channels=3, scale=2, num_layers=5,fea_dim=32)
+    img = torch.randn((1,3,256,256))
+    net = PASR(input_channels=3, output_channels=3, scale=4, num_layers=5,fea_dim=32)
     y = net.get_feature(img)
-    # output = net(img)
-    print(y.shape)
+    output = net(img)
+    print(y.shape,output.shape)
 
     # print(net)
     # torchstat.stat(net,(3,64,64))

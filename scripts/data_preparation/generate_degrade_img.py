@@ -7,7 +7,7 @@ from basicsr.utils import SRMDPreprocessing
 
 # 在代码修改开头的数据配置，然后代码根目录，执行 python scripts/data_preparation/generate_degrade_img.py
 
-root_path = './datasets/sr' # 修改这个目录，指定为数据的根目录，可以用 ln -s 指令和代码目录的datasets文件夹关联
+root_path = './datasets' # 修改这个目录，指定为数据的根目录，可以用 ln -s 指令和代码目录的datasets文件夹关联
 dataset_names = ['Urban100'] # div2k set5 set14 B100 Urban100 可以处理的数据集
 scales = [2,3,4] # 不同大小的scale
 kernel_widths = [0,0.6,1.2,1.8] # 不同的同向高斯核宽度

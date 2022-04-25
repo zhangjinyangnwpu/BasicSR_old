@@ -114,12 +114,12 @@ def main_div2k():
     extract_subimages(opt)
 
     # LRx8 images
-    opt['input_folder'] = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X8'
-    opt['save_folder'] = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X8_sub'
-    opt['crop_size'] = 60
-    opt['step'] = 30
-    opt['thresh_size'] = 0
-    extract_subimages(opt)
+    # opt['input_folder'] = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X8'
+    # opt['save_folder'] = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X8_sub'
+    # opt['crop_size'] = 60
+    # opt['step'] = 30
+    # opt['thresh_size'] = 0
+    # extract_subimages(opt)
 
 
 def extract_subimages(opt):
@@ -200,5 +200,5 @@ def worker(path, opt):
 
 
 if __name__ == '__main__':
-    # main_div2k()
-    main_div2k_flickr2k()
+    main_div2k()
+    # main_div2k_flickr2k()
