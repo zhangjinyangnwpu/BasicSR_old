@@ -22,3 +22,10 @@ experiments/PASR_Lx2_f256b32_RealSR_50k_B32G1_layer10_wandb_with_contrastive_lr_
 
 PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="2" nohup python basicsr/train.py -opt options/train/PASR/train_PASR_Lx4_realsr.yml &
 PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="1" python basicsr/train.py -opt options/train/PASR/train_PASR_Lx3_realsr.yml
+
+
+nohup python basicsr/train.py -opt options/train/PASR/train_PASR_Lx2_div2k.yml &
+
+nohup python basicsr/train.py -opt options/train/FFC/train_FFC_Lx4_div2k.yml &
+
+

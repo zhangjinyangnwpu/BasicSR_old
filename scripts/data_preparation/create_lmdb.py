@@ -18,10 +18,10 @@ def create_lmdb_for_div2k():
         Remember to modify opt configurations according to your settings.
     """
     # HR images
-    # folder_path = 'datasets/DIV2K/DIV2K_train_HR_sub'
-    # lmdb_path = 'datasets/DIV2K/DIV2K_train_HR_sub.lmdb'
-    # img_path_list, keys = prepare_keys_div2k(folder_path)
-    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
+    folder_path = 'datasets/DIV2K/DIV2K_train_HR_sub'
+    lmdb_path = 'datasets/DIV2K/DIV2K_train_HR_sub.lmdb'
+    img_path_list, keys = prepare_keys_div2k(folder_path)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True,n_thread=16)
 
     # LRx2 images
     # folder_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X2_sub'
