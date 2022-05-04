@@ -1,5 +1,5 @@
 # general settings
-name: FFC_Lx4_DIV2K_rrdb5_featdim32_B32
+name: FFC_Lx4_DIV2K_rrdb5_featdim32_B32_pixelshuffle
 model_type: SRModel
 scale: 4
 num_gpu: 1  # set num_gpu: 0 for cpu mode

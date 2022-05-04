@@ -3,7 +3,7 @@ from torch import nn as nn
 from torch.nn import functional as F
 
 from basicsr.utils.registry import ARCH_REGISTRY
-from .arch_util import default_init_weights, make_layer, pixel_unshuffle
+from .arch_util import default_init_weights, make_layer, pixel_unshuffle,Upsample
 
 class SELayer(nn.Module):
     def __init__(self, channel, reduction=16):
@@ -198,6 +198,14 @@ class RRDBNet_FFC(nn.Module):
         self.conv_up2_spatial = nn.Conv2d(num_feat, num_feat, 3, 1, 1)
         self.conv_up2_ffc = FourierUnit(num_feat, num_feat)
         self.conv_up2 = nn.Conv2d(num_feat * 2, num_feat, 3, 1, 1)
+        self.conv_up3_spatial = nn.Conv2d(num_feat, num_feat, 3, 1, 1)
+        self.conv_up3_ffc = FourierUnit(num_feat, num_feat)
+        self.conv_up3 = nn.Conv2d(num_feat * 2, num_feat, 3, 1, 1)
+
+        self.upsample1 = Upsample(2, num_feat)
+        self.upsample2 = Upsample(2, num_feat)
+        self.upsample3 = Upsample(2, num_feat)
+
         self.conv_hr = nn.Conv2d(num_feat, num_feat, 3, 1, 1)
         self.conv_last = nn.Conv2d(num_feat, num_out_ch, 3, 1, 1)
 
@@ -215,14 +223,23 @@ class RRDBNet_FFC(nn.Module):
         feat = self.conv_first(torch.cat([feat_first_sp,feat_first_ffc],dim=1))
         body_feat = self.conv_body(self.body(feat))
         feat = feat + body_feat
-        # upsample
+
         feat_up1_sp = self.conv_up1_spatial(feat)
         feat_up1_ffc = self.conv_up1_ffc(feat)
-        feat = torch.cat([feat_up1_sp,feat_up1_ffc],dim=1)
-        feat = self.lrelu(self.conv_up1(F.interpolate(feat, scale_factor=2, mode='nearest')))
+        feat = torch.cat([feat_up1_sp, feat_up1_ffc], dim=1)
+        feat = self.conv_up1(feat)
+        feat = self.upsample1(feat)
+
         feat_up2_sp = self.conv_up2_spatial(feat)
         feat_up2_ffc = self.conv_up2_ffc(feat)
         feat = torch.cat([feat_up2_sp, feat_up2_ffc], dim=1)
-        feat = self.lrelu(self.conv_up2(F.interpolate(feat, scale_factor=2, mode='nearest')))
+        feat = self.conv_up2(feat)
+        feat = self.upsample2(feat)
+        if self.scale == 8:
+            feat_up3_sp = self.conv_up3_spatial(feat)
+            feat_up3_ffc = self.conv_up3_ffc(feat)
+            feat = torch.cat([feat_up3_sp, feat_up3_ffc], dim=1)
+            feat = self.conv_up3(feat)
+            feat = self.upsample3(feat)
         out = self.conv_last(self.lrelu(self.conv_hr(feat)))
         return out
