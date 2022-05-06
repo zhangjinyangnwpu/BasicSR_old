@@ -101,7 +101,7 @@ for dataset_name in dataset_names:
                         plt.savefig(os.path.join(save_path, 'kernel.jpg'), cmap='Greys')
                         # break
             elif blur_type == 'aniso_gaussian':
-                kernel_size = 25  # gaussian kernel size
+                kernel_size = 11  # gaussian kernel size
                 for lambda1 in lambda1s:
                     for lambda2 in lambda2s:
                         for theta in thetas:
