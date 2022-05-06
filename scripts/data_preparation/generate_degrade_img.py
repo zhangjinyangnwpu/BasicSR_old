@@ -24,7 +24,7 @@ kernel_widths = [0,0.6,1.2,1.8] # 不同的同向高斯核宽度
 # for aniso_gaussian
 lambda1s = [0.5]
 lambda2s = [3]
-thetas = [2]
+thetas = [60]
 noises = [30]
 
 for dataset_name in dataset_names:
