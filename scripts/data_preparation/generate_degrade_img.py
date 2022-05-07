@@ -96,9 +96,10 @@ for dataset_name in dataset_names:
                         lr_img = torchvision.transforms.ToPILImage()(lr)
                         lr_img.save(os.path.join(save_path, os.path.basename(name)))
                         plt.clf()
-                        plt.figure(figsize=(5, 5))
-                        plt.imshow(kernel, interpolation='bicubic')
-                        plt.savefig(os.path.join(save_path, 'kernel.jpg'), cmap='Greys')
+                        plt.clf()
+                        plt.axis('off')
+                        plt.imshow(kernel, cmap='binary_r', interpolation='bicubic')  # binary_r binary
+                        plt.savefig(os.path.join(save_path, 'kernel.jpg'), bbox_inches='tight', pad_inches=0)
                         # break
             elif blur_type == 'aniso_gaussian':
                 kernel_size = 11  # gaussian kernel size
@@ -136,10 +137,9 @@ for dataset_name in dataset_names:
                                     lr_img.save(os.path.join(save_path, os.path.basename(name)))
                                     sio.savemat(os.path.join(save_path,'kernel.mat'),{'kernel':kernel})
                                     plt.clf()
-                                    plt.figure(figsize=(5, 5))
-                                    plt.imshow(kernel,interpolation='bicubic')
-                                    plt.savefig(os.path.join(save_path,'kernel.jpg'),cmap='Greys')
-
+                                    plt.axis('off')
+                                    plt.imshow(kernel, cmap='binary_r', interpolation='bicubic')  # binary_r binary
+                                    plt.savefig(os.path.join(save_path,'kernel.jpg'), bbox_inches='tight', pad_inches=0)
             else:
                 raise TypeError
 
