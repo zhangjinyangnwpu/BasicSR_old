@@ -31,7 +31,6 @@ class FourierUnit(nn.Module):
         # bn_layer not used
         super(FourierUnit, self).__init__()
         self.groups = groups
-
         self.conv_layer = torch.nn.Conv2d(in_channels=in_channels * 2 + (2 if spectral_pos_encoding else 0),
                                           out_channels=out_channels * 2,
                                           kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False)

@@ -60,7 +60,7 @@ class ConvBlock(nn.Module):
         super(ConvBlock,self).__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3,stride=1, padding=1)
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3,stride=1, padding=1)
-        self.act = nn.ReLU()
+        self.act = nn.SELU()
         self.if_down = False
         if in_channels != out_channels:
             self.if_down = True
@@ -139,6 +139,7 @@ class BiFPNBlockFusion(nn.Module):
     """
     def __init__(self, feature_size=64, epsilon=0.0001,Block_Type=ConvBlock):
         super(BiFPNBlockFusion, self).__init__()
+        self.residual_ratio = 0.2
         self.epsilon = epsilon
         self.p1_td = Block_Type(feature_size*2, feature_size)
         self.p2_td = Block_Type(feature_size*2, feature_size)
@@ -151,28 +152,29 @@ class BiFPNBlockFusion(nn.Module):
         self.p5_out = Block_Type(feature_size*2, feature_size)
 
 
-    def forward(self, inputs):
-        level1,level2,level3,level4,level5 = inputs
+    def forward(self, x):
+        level1,level2,level3,level4,level5 = x
+        residual_ratio = self.residual_ratio
 
         level5_td = level5
-        level4_td = self.p4_td(torch.cat([level4, level5_td],1))
-        level3_td = self.p3_td(torch.cat([level3, level4_td],1))
-        level2_td = self.p2_td(torch.cat([level2, level3_td],1))
-        level1_td = self.p1_td(torch.cat([level1, level2_td],1))
+        level4_td = self.p4_td(torch.cat([level4, level5_td], 1))
+        level3_td = self.p3_td(torch.cat([level3, level4_td], 1))
+        level2_td = self.p2_td(torch.cat([level2, level3_td], 1))
+        level1_td = self.p1_td(torch.cat([level1, level2_td], 1))
 
         # Calculate Bottom-Up Pathway
         level1_out = level1_td
-        level2_out = self.p2_out(torch.cat([level2_td,level1_out],1))
-        level3_out = self.p3_out(torch.cat([level3_td,level2_out],1))
-        level4_out = self.p4_out(torch.cat([level4_td,level3_out],1))
-        level5_out = self.p5_out(torch.cat([level5_td,level4_out],1))
+        level2_out = self.p2_out(torch.cat([level2_td, level1_out], 1))
+        level3_out = self.p3_out(torch.cat([level3_td, level2_out], 1))
+        level4_out = self.p4_out(torch.cat([level4_td, level3_out], 1))
+        level5_out = self.p5_out(torch.cat([level5_td, level4_out], 1))
 
         # block residual
-        level1_out += level1
-        level2_out += level2
-        level3_out += level3
-        level4_out += level4
-        level5_out += level5
+        level1_out += level1 * residual_ratio
+        level2_out += level2 * residual_ratio
+        level3_out += level3 * residual_ratio
+        level4_out += level4 * residual_ratio
+        level5_out += level5 * residual_ratio
 
         return [level1_out, level2_out, level3_out, level4_out, level5_out]
 
@@ -182,28 +184,30 @@ class PASR(nn.Module):
                  use_squeeze=False,fea_dim=32):
         super(PASR,self).__init__()
 
+        self.residual_ratio = 0.2
         self.use_squeeze = use_squeeze
         self.conv_first = nn.Conv2d(input_channels,fea_dim,kernel_size=(3,3),stride=(1,1),padding=(1,1))
 
-        self.level1 = nn.Conv2d(fea_dim,fea_dim,kernel_size=(1,1),stride=(1,1),padding=(0,0))
-        self.level2 = nn.Conv2d(fea_dim,fea_dim,kernel_size=(3,3),stride=(1,1),padding=(1,1))
-        self.level3 = nn.Conv2d(fea_dim,fea_dim,kernel_size=(3,3),stride=(1,1),padding=(3,3),dilation=(3,3))
-        self.level4 = nn.Conv2d(fea_dim,fea_dim,kernel_size=(3,3),stride=(1,1),padding=(6,6),dilation=(6,6))
-        self.level5 = nn.Conv2d(fea_dim,fea_dim,kernel_size=(3,3),stride=(1,1),padding=(9,9),dilation=(9,9))
+        self.level1 = nn.Conv2d(fea_dim,fea_dim,kernel_size=(1,1),stride=(1,1),padding=(0,0),groups=8)
+        self.level2 = nn.Conv2d(fea_dim,fea_dim,kernel_size=(3,3),stride=(1,1),padding=(1,1),groups=8)
+        self.level3 = nn.Conv2d(fea_dim,fea_dim,kernel_size=(3,3),stride=(1,1),padding=(3,3),dilation=(3,3),groups=8)
+        self.level4 = nn.Conv2d(fea_dim,fea_dim,kernel_size=(3,3),stride=(1,1),padding=(6,6),dilation=(6,6),groups=8)
+        self.level5 = nn.Conv2d(fea_dim,fea_dim,kernel_size=(3,3),stride=(1,1),padding=(9,9),dilation=(9,9),groups=8)
 
-        self.act = nn.ReLU()
+        self.act = nn.SELU()
         bifpns = []
         for _ in range(num_layers):
             bifpns.append(BiFPNBlockFusion(fea_dim))
         self.bifpn = nn.Sequential(*bifpns)
-        self.conv_fusion = nn.Conv2d(fea_dim*5,fea_dim,kernel_size=(3,3),stride=(1,1),padding=(1,1))
-        self.upper = Upsample(scale= scale,num_feat = fea_dim)
+        self.conv_fusion1 = nn.Conv2d(fea_dim * 5, fea_dim * 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1),groups=8)
+        self.conv_fusion2 = nn.Conv2d(fea_dim * 3, fea_dim * 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1),groups=8)
+        self.upper = Upsample(scale = scale,num_feat = fea_dim)
         self.conv_last = nn.Conv2d(fea_dim,output_channels,kernel_size=(3,3),stride=(1,1),padding=(1,1))
 
         self.feature = ResExtractor()
 
-    def forward(self, input):
-        conv_first = self.conv_first(input)
+    def forward(self, x):
+        conv_first = self.conv_first(x)
         if not self.use_squeeze:
             level1 = self.level1(conv_first)
             level2 = self.level2(conv_first)
@@ -220,17 +224,19 @@ class PASR(nn.Module):
         features = [level1,level2,level3,level4,level5]
         f_level1,f_level2,f_level3,f_level4,f_level5 = self.bifpn(features)
 
+        residual_ratio = self.residual_ratio
         # total residual
-        f_level1 += level1
-        f_level2 += level2
-        f_level3 += level3
-        f_level4 += level4
-        f_level5 += level5
+        f_level1 += level1 * residual_ratio
+        f_level2 += level2 * residual_ratio
+        f_level3 += level3 * residual_ratio
+        f_level4 += level4 * residual_ratio
+        f_level5 += level5 * residual_ratio
 
-        f_layer = torch.cat([f_level1,f_level2,f_level3,f_level4,f_level5],1)
-        f_layer = self.act(self.conv_fusion(f_layer))
-        f_layer = self.upper(f_layer)
-        output = self.conv_last(f_layer)
+        f_output = torch.cat([f_level1,f_level2,f_level3,f_level4,f_level5],1)
+        f_output = self.act(self.conv_fusion1(f_output))
+        f_output = self.act(self.conv_fusion2(f_output))
+        f_output = self.upper(f_output)
+        output = self.conv_last(f_output)
 
         return output
 
