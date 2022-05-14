@@ -204,9 +204,16 @@ class PASR(nn.Module):
         self.upper = Upsample(scale = scale,num_feat = fea_dim)
         self.conv_last = nn.Conv2d(fea_dim,output_channels,kernel_size=(3,3),stride=(1,1),padding=(1,1))
 
-        self.feature = ResExtractor()
+        # self.feature = ResExtractor()
 
-    def forward(self, x):
+        self.degrate_extractor1 = nn.Conv2d(fea_dim, fea_dim*2, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        self.degrate_norm1 = nn.BatchNorm2d(fea_dim*2)
+        self.degrate_extractor2 = nn.Conv2d(fea_dim*2, fea_dim*4, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        self.degrate_norm2 = nn.BatchNorm2d(fea_dim * 4)
+        self.degrate_pool = nn.AdaptiveAvgPool2d(1)
+        self.degrate_feature = nn.Linear(fea_dim * 4, 128)
+
+    def feature_calc(self,x):
         conv_first = self.conv_first(x)
         if not self.use_squeeze:
             level1 = self.level1(conv_first)
@@ -221,8 +228,8 @@ class PASR(nn.Module):
             level4 = self.level4(level3)
             level5 = self.level5(level4)
 
-        features = [level1,level2,level3,level4,level5]
-        f_level1,f_level2,f_level3,f_level4,f_level5 = self.bifpn(features)
+        features = [level1, level2, level3, level4, level5]
+        f_level1, f_level2, f_level3, f_level4, f_level5 = self.bifpn(features)
 
         residual_ratio = self.residual_ratio
         # total residual
@@ -232,16 +239,28 @@ class PASR(nn.Module):
         f_level4 += level4 * residual_ratio
         f_level5 += level5 * residual_ratio
 
-        f_output = torch.cat([f_level1,f_level2,f_level3,f_level4,f_level5],1)
+        f_output = torch.cat([f_level1, f_level2, f_level3, f_level4, f_level5], 1)
         f_output = self.act(self.conv_fusion1(f_output))
         f_output = self.act(self.conv_fusion2(f_output))
-        f_output = self.upper(f_output)
-        output = self.conv_last(f_output)
+
+        return f_output
+
+    def forward(self, x):
+        f_output = self.feature_calc(x)
+        output = self.upper(f_output)
+        output = self.conv_last(output)
 
         return output
 
-    def get_feature(self, x):
-        return self.feature(x)
+
+    def get_feature(self,x):
+        f_output = self.feature_calc(x)
+        deg1 = self.degrate_norm1(self.act(self.degrate_extractor1(f_output)))
+        deg2 = self.degrate_norm2(self.act(self.degrate_extractor2(deg1)))
+        deg_feature = self.degrate_pool(deg2)
+        deg_feature = deg_feature.view(deg_feature.size(0), -1)
+        deg_feature = self.degrate_feature(deg_feature)
+        return deg_feature
 
 
 

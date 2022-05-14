@@ -179,6 +179,9 @@ class ContrastiveLoss(nn.Module):
         pos_loss = mse_loss(sim_pos,self.label_pos)
         neg_loss = mse_loss(sim_neg,self.label_neg)
 
+        # pos_loss = bce_loss(sim_pos, self.label_pos)
+        # neg_loss = bce_loss(sim_neg, self.label_neg)
+
         loss = pos_loss + neg_loss
 
         del self.label_pos,self.label_neg
