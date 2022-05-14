@@ -27,7 +27,7 @@ datasets:
     # data loader
     use_shuffle: true
     num_worker_per_gpu: 6
-    batch_size_per_gpu: 16
+    batch_size_per_gpu: 2
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
@@ -56,8 +56,8 @@ network_g:
   scale: 4
   input_channels: 3
   output_channels: 3
-  num_layers: 10
-  fea_dim: 64
+  num_layers: 5
+  fea_dim: 32
   use_squeeze: false
 
 
@@ -105,6 +105,10 @@ train:
   # losses
   pixel_opt:
     type: L1Loss
+    loss_weight: 1.0
+    reduction: mean
+  contrastive_opt:
+    type: ContrastiveLoss
     loss_weight: 1.0
     reduction: mean
 
