@@ -1,5 +1,6 @@
 import math
 import torch
+import torchvision.models
 from torch import autograd as autograd
 from torch import nn as nn
 from torch.nn import functional as F
@@ -189,6 +190,11 @@ class ContrastiveLoss(nn.Module):
         super(ContrastiveLoss, self).__init__()
         if reduction not in ['none', 'mean', 'sum']:
             raise ValueError(f'Unsupported reduction mode: {reduction}. Supported ones are: {_reduction_modes}')
+        extarctor = torchvision.models.vgg19(pretrained=True).features
+        self.extractor = nn.Sequential(
+            extarctor,
+            nn.AdaptiveAvgPool2d((1,1)),
+        ).cuda()
 
         self.loss_weight = loss_weight
         self.reduction = reduction
@@ -198,18 +204,23 @@ class ContrastiveLoss(nn.Module):
         self.label_pos = torch.ones(anchor.shape[0]).to(device)
         self.label_neg = torch.zeros(anchor.shape[0]).to(device)
 
-        anchor = F.normalize(anchor)
-        pos = F.normalize(pos)
-        neg = F.normalize(neg)
+        with torch.no_grad():
+            feature_anchor = self.extractor(anchor)
+            feature_pos = self.extractor(pos)
+            feature_neg = self.extractor(neg)
+
+            feature_anchor = feature_anchor.view(feature_anchor.shape[0],-1)
+            feature_pos = feature_pos.view(feature_pos.shape[0], -1)
+            feature_neg = feature_neg.view(feature_neg.shape[0], -1)
+        anchor = F.normalize(feature_anchor)
+        pos = F.normalize(feature_pos)
+        neg = F.normalize(feature_neg)
 
         sim_pos = F.cosine_similarity(anchor,pos)
         sim_neg = F.cosine_similarity(anchor,neg)
 
         pos_loss = mse_loss(sim_pos,self.label_pos)
         neg_loss = mse_loss(sim_neg,self.label_neg)
-
-        # pos_loss = bce_loss(sim_pos, self.label_pos)
-        # neg_loss = bce_loss(sim_neg, self.label_neg)
 
         loss = pos_loss + neg_loss
 

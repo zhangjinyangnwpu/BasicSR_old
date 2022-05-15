@@ -3,14 +3,14 @@ import torch
 
 from basicsr.losses.losses import CharbonnierLoss, L1Loss, MSELoss, WeightedTVLoss,ContrastiveLoss
 
-def test_conloss():
+def conloss():
     loss = ContrastiveLoss()
-    anchor = torch.randn(3,128)
-    pos = torch.randn(3,128)
-    neg = torch.randn(3,128)
+    anchor = torch.randn(2,3,128,128).cuda()
+    pos = torch.randn(2,3,128,128).cuda()
+    neg = torch.randn(2,3,128,128).cuda()
     loss(anchor,pos,neg)
 
-test_conloss()
+# conloss()
 
 @pytest.mark.parametrize('loss_class', [L1Loss, MSELoss, CharbonnierLoss])
 def test_pixellosses(loss_class):
