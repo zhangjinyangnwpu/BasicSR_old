@@ -7,6 +7,7 @@ from torch.nn import functional as F
 from basicsr.archs.vgg_arch import VGGFeatureExtractor
 from basicsr.utils.registry import LOSS_REGISTRY
 from .loss_util import weighted_loss
+from .vgg19 import Vgg19
 
 _reduction_modes = ['none', 'mean', 'sum']
 
@@ -153,6 +154,34 @@ class TripleLoss(nn.Module):
 
     def forward(self, anchor, pos, neg, weight=None, **kwargs):
         return self.loss_weight * self.triple_loss(anchor, pos, neg)
+
+@LOSS_REGISTRY.register()
+class ContrastLoss_VGG19(nn.Module):
+    def __init__(self):
+
+        super(ContrastLoss_VGG19, self).__init__()
+        self.vgg = Vgg19().cuda()
+        self.l1 = nn.L1Loss()
+        self.l_mse = nn.MSELoss()
+        self.weights = [1.0/32, 1.0/16, 1.0/8, 1.0/4, 1.0]
+
+    def forward(self, a, p, n):
+        a_vgg, p_vgg, n_vgg = self.vgg(a), self.vgg(p), self.vgg(n)
+        loss = 0
+        # label_pos = torch.ones(a.shape[0]).cuda()
+        # label_neg = torch.zeros(a.shape[0]).cuda()
+        d_ap, d_an = 0, 0
+        for i in range(len(a_vgg)):
+            d_ap = self.l1(a_vgg[i], p_vgg[i].detach())
+            d_an = self.l1(a_vgg[i], n_vgg[i].detach())
+            contrastive = d_ap / (d_an + 1e-7)
+            # pos_loss = self.l_mse(d_ap, label_pos)
+            # neg_loss = self.l_mse(d_an, label_neg)
+            # contrastive = pos_loss + neg_loss
+            loss += self.weights[i] * contrastive
+        return loss
+
+
 
 @LOSS_REGISTRY.register()
 class ContrastiveLoss(nn.Module):

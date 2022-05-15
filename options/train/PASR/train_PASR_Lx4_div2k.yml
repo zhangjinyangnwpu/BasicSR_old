@@ -1,5 +1,5 @@
 # general settings
-name: BiFPN_Lx4_DIV2K_layer10_featdim64_B16_inter_constractive
+name: BiFPN_Lx4_DIV2K_layer10_featdim64_B16_constractive_vgg
 model_type: PASRModel
 scale: 4
 num_gpu: 1  # set num_gpu: 0 for cpu mode
@@ -27,7 +27,7 @@ datasets:
     # data loader
     use_shuffle: true
     num_worker_per_gpu: 6
-    batch_size_per_gpu: 2
+    batch_size_per_gpu: 16
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
@@ -56,15 +56,15 @@ network_g:
   scale: 4
   input_channels: 3
   output_channels: 3
-  num_layers: 5
-  fea_dim: 32
+  num_layers: 10
+  fea_dim: 64
   use_squeeze: false
 
 
 # for gaussion degrade
 degrade:
   flag: false
-  scale: 2
+  scale: 4
   mode: bicubic
   kernel_size: 21 # gaussian kernel size
   blur_type: iso_gaussian # iso_gaussian or aniso_gaussian
@@ -108,9 +108,7 @@ train:
     loss_weight: 1.0
     reduction: mean
   contrastive_opt:
-    type: ContrastiveLoss
-    loss_weight: 1.0
-    reduction: mean
+    type: ContrastLoss_VGG19
 
 # validation settings
 val:

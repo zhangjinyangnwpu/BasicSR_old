@@ -206,12 +206,12 @@ class PASR(nn.Module):
 
         # self.feature = ResExtractor()
 
-        self.degrate_extractor1 = nn.Conv2d(fea_dim, fea_dim*2, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
-        self.degrate_norm1 = nn.BatchNorm2d(fea_dim*2)
-        self.degrate_extractor2 = nn.Conv2d(fea_dim*2, fea_dim*4, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
-        self.degrate_norm2 = nn.BatchNorm2d(fea_dim * 4)
-        self.degrate_pool = nn.AdaptiveAvgPool2d(1)
-        self.degrate_feature = nn.Linear(fea_dim * 4, 128)
+        # self.degrate_extractor1 = nn.Conv2d(fea_dim, fea_dim*2, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        # self.degrate_norm1 = nn.BatchNorm2d(fea_dim*2)
+        # self.degrate_extractor2 = nn.Conv2d(fea_dim*2, fea_dim*4, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        # self.degrate_norm2 = nn.BatchNorm2d(fea_dim * 4)
+        # self.degrate_pool = nn.AdaptiveAvgPool2d(1)
+        # self.degrate_feature = nn.Linear(fea_dim * 4, 128)
 
     def feature_calc(self,x):
         conv_first = self.conv_first(x)
@@ -253,14 +253,14 @@ class PASR(nn.Module):
         return output
 
 
-    def get_feature(self,x):
-        f_output = self.feature_calc(x)
-        deg1 = self.degrate_norm1(self.act(self.degrate_extractor1(f_output)))
-        deg2 = self.degrate_norm2(self.act(self.degrate_extractor2(deg1)))
-        deg_feature = self.degrate_pool(deg2)
-        deg_feature = deg_feature.view(deg_feature.size(0), -1)
-        deg_feature = self.degrate_feature(deg_feature)
-        return deg_feature
+    # def get_feature(self,x):
+    #     f_output = self.feature_calc(x)
+    #     deg1 = self.degrate_norm1(self.act(self.degrate_extractor1(f_output)))
+    #     deg2 = self.degrate_norm2(self.act(self.degrate_extractor2(deg1)))
+    #     deg_feature = self.degrate_pool(deg2)
+    #     deg_feature = deg_feature.view(deg_feature.size(0), -1)
+    #     deg_feature = self.degrate_feature(deg_feature)
+    #     return deg_feature
 
 
 
