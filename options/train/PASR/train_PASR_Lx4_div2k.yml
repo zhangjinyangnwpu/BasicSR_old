@@ -63,7 +63,7 @@ network_g:
 
 # for gaussion degrade
 degrade:
-  flag: false
+  flag: true
   scale: 4
   mode: bicubic
   kernel_size: 21 # gaussian kernel size
