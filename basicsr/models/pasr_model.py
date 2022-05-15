@@ -174,7 +174,7 @@ class PASRModel(BaseModel):
                 #     feature_lq = self.net_g.get_feature(lq_inter)
                 lq_inter = torch.nn.functional.interpolate(self.lq, scale_factor=self.scale, mode='bicubic')
                 l_contrastive = self.cri_contrastive(self.output,self.gt,lq_inter)
-                l_total += l_contrastive * 0.1
+                l_total += l_contrastive
                 loss_dict['l_contrastive'] = l_contrastive
         # perceptual loss
         if self.cri_perceptual:
