@@ -163,7 +163,6 @@ class ContrastLoss_VGG19(nn.Module):
         super(ContrastLoss_VGG19, self).__init__()
         self.vgg = Vgg19().cuda()
         self.l1 = nn.L1Loss()
-        self.l_mse = nn.MSELoss()
         self.weights = [1.0/32, 1.0/16, 1.0/8, 1.0/4, 1.0]
         self.loss_weight = loss_weight
         self.reduction = reduction
@@ -175,8 +174,8 @@ class ContrastLoss_VGG19(nn.Module):
         # label_neg = torch.zeros(a.shape[0]).cuda()
         d_ap, d_an = 0, 0
         for i in range(len(a_vgg)):
-            d_ap = self.l1(a_vgg[i], p_vgg[i].detach(),reduction = self.reduction)
-            d_an = self.l1(a_vgg[i], n_vgg[i].detach(),reduction = self.reduction)
+            d_ap = l1_loss(a_vgg[i], p_vgg[i].detach(),reduction = self.reduction)
+            d_an = l1_loss(a_vgg[i], n_vgg[i].detach(),reduction = self.reduction)
             contrastive = d_ap / (d_an + 1e-7)
             # pos_loss = self.l_mse(d_ap, label_pos)
             # neg_loss = self.l_mse(d_an, label_neg)

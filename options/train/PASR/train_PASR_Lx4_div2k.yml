@@ -108,7 +108,7 @@ train:
     loss_weight: 1.0
     reduction: mean
   contrastive_opt:
-    type: ContrastiveLoss #ContrastLoss_VGG19
+    type: ContrastLoss_VGG19 #ContrastLoss_VGG19 ContrastiveLoss
     loss_weight: 1.0
     reduction: mean
 
