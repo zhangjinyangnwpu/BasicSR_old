@@ -107,10 +107,10 @@ train:
     type: L1Loss
     loss_weight: 1.0
     reduction: mean
-  contrastive_opt:
-    type: ContrastLoss_VGG19 #ContrastLoss_VGG19 ContrastiveLoss
-    loss_weight: 1.0
-    reduction: mean
+#  contrastive_opt:
+#    type: ContrastLoss_VGG19 #ContrastLoss_VGG19 ContrastiveLoss
+#    loss_weight: 1.0
+#    reduction: mean
 
 # validation settings
 val:

@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from basicsr.archs.rrdbnet_ffc_arch import RRDBNet_FFC
+from basicsr.archs.ffc_rrdbnet_arch import RRDBNet_FFC
 
 
 def test_rrdb_ffc():

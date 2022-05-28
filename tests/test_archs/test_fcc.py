@@ -1,7 +1,6 @@
-import pytest
 import torch
 
-from basicsr.archs.ffc_arch import FFCResNetGenerator
+from basicsr.archs.ffc_unit import FFCResNetGenerator
 
 
 def test_rrdb_ffc():

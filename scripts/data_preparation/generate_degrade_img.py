@@ -16,7 +16,7 @@ from basicsr.utils import SRMDPreprocessing
 root_path = './datasets' # 修改这个目录，指定为数据的根目录，可以用 ln -s 指令和代码目录的datasets文件夹关联
 dataset_names = ['set5'] # div2k set5 set14 B100 Urban100 可以处理的数据集
 scales = [2] # 不同大小的scale
-blur_types = ['aniso_gaussian']  # iso_gaussian or aniso_gaussian，高斯核类型，aniso_gaussian还未处理
+blur_types = ['iso_gaussian']  # iso_gaussian or aniso_gaussian，高斯核类型，aniso_gaussian还未处理
 
 # for iso_gaussian
 kernel_widths = [0,0.6,1.2,1.8] # 不同的同向高斯核宽度
@@ -89,17 +89,20 @@ for dataset_name in dataset_names:
                         hr = Image.open(name)
                         hr = torchvision.transforms.ToTensor()(hr)
                         hr = hr.unsqueeze(0).cuda()
+                        print(hr.shape)
                         lr, kernel = degrade(hr, random=False)
-                        kernel = kernel.cpu()[0]
+                        if kernel is not None:
+                            kernel = kernel.cpu()[0]
                         print(hr.shape,lr.shape)
                         lr = lr.squeeze(0).cpu()
                         lr_img = torchvision.transforms.ToPILImage()(lr)
                         lr_img.save(os.path.join(save_path, os.path.basename(name)))
-                        plt.clf()
-                        plt.clf()
-                        plt.axis('off')
-                        plt.imshow(kernel, cmap='binary_r', interpolation='bicubic')  # binary_r binary
-                        plt.savefig(os.path.join(save_path, 'kernel.jpg'), bbox_inches='tight', pad_inches=0)
+                        if kernel is not None:
+                            plt.clf()
+                            plt.clf()
+                            plt.axis('off')
+                            plt.imshow(kernel, cmap='binary_r', interpolation='bicubic')  # binary_r binary
+                            plt.savefig(os.path.join(save_path, 'kernel.jpg'), bbox_inches='tight', pad_inches=0)
                         # break
             elif blur_type == 'aniso_gaussian':
                 kernel_size = 11  # gaussian kernel size
