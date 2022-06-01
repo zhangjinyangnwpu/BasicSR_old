@@ -44,8 +44,8 @@ def main():
     opt['compression_level'] = 3
 
     # HR images
-    opt['input_folder'] = 'datasets/RealSR(V3)/All/Train/3'
-    opt['save_folder'] = 'datasets/RealSR(V3)/All/Train/3_HR_sub'
+    opt['input_folder'] = 'datasets/RealSR(V3)/All/Train/2'
+    opt['save_folder'] = 'datasets/RealSR(V3)/All/Train/2_HR_sub'
     opt['crop_size'] = 480
     opt['step'] = 240
     opt['thresh_size'] = 0
@@ -59,24 +59,24 @@ def main():
     opt['step'] = 120
     opt['thresh_size'] = 0
     opt['hr'] = False
-    # extract_subimages(opt)
-
-    # LRx3 images
-    opt['input_folder'] = 'datasets/RealSR(V3)/All/Train/3'
-    opt['save_folder'] = 'datasets/RealSR(V3)/All/Train/3_LR_sub'
-    opt['crop_size'] = 160
-    opt['step'] = 80
-    opt['thresh_size'] = 0
-    opt['hr'] = False
     extract_subimages(opt)
 
+    # LRx3 images
+    # opt['input_folder'] = 'datasets/RealSR(V3)/All/Train/3'
+    # opt['save_folder'] = 'datasets/RealSR(V3)/All/Train/3_LR_sub'
+    # opt['crop_size'] = 160
+    # opt['step'] = 80
+    # opt['thresh_size'] = 0
+    # opt['hr'] = False
+    # extract_subimages(opt)
+
     # LRx4 images
-    opt['input_folder'] = 'datasets/RealSR(V3)/All/Train/4'
-    opt['save_folder'] = 'datasets/RealSR(V3)/All/Train/4_LR_sub'
-    opt['crop_size'] = 120
-    opt['step'] = 60
-    opt['thresh_size'] = 0
-    opt['hr'] = False
+    # opt['input_folder'] = 'datasets/RealSR(V3)/All/Train/4'
+    # opt['save_folder'] = 'datasets/RealSR(V3)/All/Train/4_LR_sub'
+    # opt['crop_size'] = 120
+    # opt['step'] = 60
+    # opt['thresh_size'] = 0
+    # opt['hr'] = False
     # extract_subimages(opt)
 
 

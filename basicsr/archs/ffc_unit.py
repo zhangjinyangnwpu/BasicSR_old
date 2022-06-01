@@ -159,6 +159,7 @@ class SpectralTransform(nn.Module):
             split_no = 2
             split_s_h = h // split_no
             split_s_w = w // split_no
+            # print(x[:, :c // 4].shape,split_s_h)
             xs = torch.cat(torch.split(
                 x[:, :c // 4], split_s_h, dim=-2), dim=1).contiguous()
             xs = torch.cat(torch.split(xs, split_s_w, dim=-1),
@@ -250,7 +251,7 @@ class BasicBlock(nn.Module):
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, ratio_gin=0.5, ratio_gout=0.5, lfu=True, use_se=False, norm_layer=None):
+                 base_width=64, dilation=1, ratio_gin=0.5, ratio_gout=0.5, lfu=False, use_se=False, norm_layer=None):
         super(BasicBlock, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -292,7 +293,7 @@ class Bottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, ratio_gin=0.5, ratio_gout=0.5, lfu=True, use_se=False):
+                 base_width=64, dilation=1, ratio_gin=0.5, ratio_gout=0.5, lfu=False, use_se=False):
         super(Bottleneck, self).__init__()
         width = int(planes * (base_width / 64.)) * groups
         # Both self.conv2 and self.downsample layers downsample the input when
