@@ -12,11 +12,11 @@ from .base_model import BaseModel
 
 
 @MODEL_REGISTRY.register()
-class SRModel(BaseModel):
+class SR_FCC_Model(BaseModel):
     """Base SR model for single image super-resolution."""
 
     def __init__(self, opt):
-        super(SRModel, self).__init__(opt)
+        super(SR_FCC_Model, self).__init__(opt)
 
         # define network
         self.net_g = build_network(opt['network_g'])
@@ -92,15 +92,18 @@ class SRModel(BaseModel):
 
     def optimize_parameters(self, current_iter):
         self.optimizer_g.zero_grad()
-        self.output = self.net_g(self.lq)
+        self.output_lr,self.output_hr = self.net_g(self.lq)
 
         l_total = 0
         loss_dict = OrderedDict()
         # pixel loss
         if self.cri_pix:
-            l_pix = self.cri_pix(self.output, self.gt)
-            l_total += l_pix
-            loss_dict['l_pix'] = l_pix
+            l_pix_lr = self.cri_pix(self.output_lr, self.lq)
+            l_total += l_pix_lr
+            loss_dict['l_pix_lr'] = l_pix_lr
+            l_pix_hr = self.cri_pix(self.output_hr, self.gt)
+            l_total += l_pix_hr
+            loss_dict['l_pix_hr'] = l_pix_hr
         # perceptual loss
         if self.cri_perceptual:
             l_percep, l_style = self.cri_perceptual(self.output, self.gt)
@@ -123,11 +126,12 @@ class SRModel(BaseModel):
         if hasattr(self, 'net_g_ema'):
             self.net_g_ema.eval()
             with torch.no_grad():
-                self.output = self.net_g_ema(self.lq)
+                _,self.output = self.net_g_ema(self.lq)
         else:
             self.net_g.eval()
             with torch.no_grad():
-                self.output = self.net_g(self.lq)
+                print(self.lq.shape)
+                _,self.output = self.net_g(self.lq)
             self.net_g.train()
 
     def dist_validation(self, dataloader, current_iter, tb_logger, save_img):

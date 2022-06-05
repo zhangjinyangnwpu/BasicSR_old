@@ -1,6 +1,6 @@
 # general settings
-name: FFC_ssresnet_Lx4_DIV2K
-model_type: SRModel
+name: FFC_ssresnet_Lx4_DIV2K_lr_sr_split
+model_type: SR_FCC_Model
 scale: 4
 num_gpu: 1  # set num_gpu: 0 for cpu mode
 manual_seed: 1
@@ -57,7 +57,7 @@ network_g:
   num_in_ch: 3
   num_out_ch: 3
   num_feat: 64
-  num_block: 10
+  num_block: 20
 
 # for gaussion degrade
 degrade:
