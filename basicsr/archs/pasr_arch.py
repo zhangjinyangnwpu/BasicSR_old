@@ -194,7 +194,6 @@ class PASR(nn.Module):
 def main():
     img = torch.randn((1,3,256,256))
     net = PASR(input_channels=3, output_channels=3, scale=4, num_layers=5,fea_dim=32)
-    y = net.get_feature(img)
     output = net(img)
     print(y.shape,output.shape)
 

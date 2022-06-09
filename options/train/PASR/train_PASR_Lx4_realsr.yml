@@ -1,27 +1,23 @@
 # general settings
-name: PASR_Lx4_f256b32_RealSR_50k_B32G1_layer10_wandb_with_contrastive_lr_inter_bsed_x2
-model_type: PASRModel
+name: BiFPN_Lx4_RealSR_layer10_featdim64_B16_20220608
+model_type: SRModel
 scale: 4
 num_gpu: 1  # set num_gpu: 0 for cpu mode
-manual_seed: 10
+manual_seed: 1
 
 # dataset and data loader settings
 datasets:
   train:
     name: RealSR
     type: PairedImageDataset
-#    dataroot_gt: datasets/DIV2K/DIV2K_train_HR_sub
-#    dataroot_lq: datasets/DIV2K/DIV2K_train_LR_bicubic/X4_sub
-    # (for lmdb)
-#    dataroot_gt: datasets/DIV2K/DIV2K_train_HR_sub.lmdb
-#    dataroot_lq: datasets/DIV2K/DIV2K_train_LR_bicubic_X4_sub.lmdb
-    dataroot_gt: datasets/RealSR(V3)/All/Train/4_HR_sub.lmdb
-    dataroot_lq: datasets/RealSR(V3)/All/Train/4_LR_sub.lmdb
+    dataroot_gt: datasets/RealSR_V3/All/Train/4_HR_sub
+    dataroot_lq: datasets/RealSR_V3/All/Train/4_LR_sub
+
     filename_tmpl: '{}'
     io_backend:
 #      type: disk
       # (for lmdb)
-      type: lmdb
+      type: disk
 
     gt_size: 192
     use_hflip: true
@@ -30,47 +26,49 @@ datasets:
     # data loader
     use_shuffle: true
     num_worker_per_gpu: 6
-    batch_size_per_gpu: 64
-    dataset_enlarge_ratio: 100
+    batch_size_per_gpu: 16
+    dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
-#  val_0:
-#    name: Set5
-#    type: PairedImageDataset
-#    dataroot_gt: datasets/Set5/GTmod12
-#    dataroot_lq: datasets/Set5/LRbicx4
-#    io_backend:
-#      type: disk
-#
-#  val_1:
-#    name: Set14
-#    type: PairedImageDataset
-#    dataroot_gt: datasets/Set14/GTmod12
-#    dataroot_lq: datasets/Set14/LRbicx4
-#    io_backend:
-#      type: disk
+  val_0:
+    name: Set5
+    type: PairedImageDataset
+    dataroot_gt: datasets/Classical/Set5/GTmod12
+    dataroot_lq: datasets/Classical/Set5/LRbicx4
+    io_backend:
+      type: disk
+
+  val_1:
+    name: Set14
+    type: PairedImageDataset
+    dataroot_gt: datasets/Classical/Set14/GTmod12
+    dataroot_lq: datasets/Classical/Set14/LRbicx4
+    io_backend:
+      type: disk
 
   val_2:
     name: RealSR
     type: PairedImageDataset
-    dataroot_gt: datasets/RealSR(V3)/All/Test/4
-    dataroot_lq: datasets/RealSR(V3)/All/Test/4
+    dataroot_gt: datasets/RealSR_V3/All/Test/4_HR
+    dataroot_lq: datasets/RealSR_V3/All/Test/4_LR
     io_backend:
       type: disk
 
 # network structures
 network_g:
   type: PASR
+  scale: 4
   input_channels: 3
   output_channels: 3
-  scale: 4
   num_layers: 10
+  fea_dim: 64
   use_squeeze: false
-  fea_dim: 32
 
+
+# for gaussion degrade
 degrade:
   flag: false
-  scale: 2
+  scale: 4
   mode: bicubic
   kernel_size: 21 # gaussian kernel size
   blur_type: iso_gaussian # iso_gaussian or aniso_gaussian
@@ -83,11 +81,11 @@ degrade:
   lambda_min: 0.2 # training 0.2 for x2,x3,x4 for aniso_gaussian
   lambda_max: 4.0 # training 4.0 for x2,x3,x4 for aniso_gaussian
   noise: 0 # random for training and testing for valiation
+
 # path
 path:
-#  pretrain_network_g: experiments/1_pretrained_models/PASR/net_g_15000.pth
-  pretrain_network_g: experiments/1_pretrained_models/PASR/x2/realsr_lr_inter_net_g_500000.pth
-  strict_load_g: false
+  pretrain_network_g: ~
+  strict_load_g: true
   resume_state: ~
 
 # training settings
@@ -101,7 +99,7 @@ train:
 
   scheduler:
     type: MultiStepLR
-    milestones: [ 250000, 400000, 450000, 475000 ]
+    milestones: [ 100000, 200000, 300000, 400000, 500000]
     gamma: 0.5
 
   total_iter: 500000
@@ -110,13 +108,13 @@ train:
 
   # losses
   pixel_opt:
-    type: SmoothL1Loss
+    type: L1Loss
     loss_weight: 1.0
     reduction: mean
-  contrastive_opt:
-    type: ContrastiveLoss
-    loss_weight: 1.0
-    reduction: mean
+#  contrastive_opt:
+#    type: ContrastLoss_VGG19 #ContrastLoss_VGG19 ContrastiveLoss
+#    loss_weight: 1.0
+#    reduction: mean
 
 # validation settings
 val:

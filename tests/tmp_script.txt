@@ -26,8 +26,8 @@ PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="1" python basicsr/train.py -
 
 nohup python basicsr/train.py -opt options/train/FFC/train_FFC_ssresnet_Lx4_div2k.yml &
 
-nohup python basicsr/train.py -opt options/train/BitSR/train_BitSR_Lx4.yml &
+nohup python basicsr/train.py -opt options/train/PASR/train_PASR_Lx4_realsr.yml &
 
-nohup python basicsr/train.py -opt options/train/FFC/train_FFC_Lx4_div2k.yml &
+python basicsr/train.py -opt options/train/BitSR/train_BitSR_Lx4.yml
 
 CUDA_VISIBLE_DEVICES=0 ./scripts/dist_train.sh 1 options/train/PASR/train_PASR_Lx4_div2k.yml
