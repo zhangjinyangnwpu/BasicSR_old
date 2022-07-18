@@ -190,7 +190,6 @@ class BiFPN_Bit(nn.Module):
 
 
 
-
 def main():
     img = torch.randn((1,24,64,64))
     net = BiFPN_Bit(input_channels=24, output_channels=3, scale=3, num_layers=5)

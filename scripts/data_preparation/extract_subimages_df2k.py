@@ -8,93 +8,43 @@ from tqdm import tqdm
 
 from basicsr.utils import scandir
 
-
-def main():
-    """A multi-thread tool to crop large images to sub-images for faster IO.
-
-    It is used for DIV2K dataset.
-
-    opt (dict): Configuration dict. It contains:
-        n_thread (int): Thread number.
-        compression_level (int):  CV_IMWRITE_PNG_COMPRESSION from 0 to 9.
-            A higher value means a smaller size and longer compression time.
-            Use 0 for faster CPU decompression. Default: 3, same in cv2.
-
-        input_folder (str): Path to the input folder.
-        save_folder (str): Path to save folder.
-        crop_size (int): Crop size.
-        step (int): Step for overlapped sliding window.
-        thresh_size (int): Threshold size. Patches whose size is lower
-            than thresh_size will be dropped.
-
-    Usage:
-        For each folder, run this script.
-        Typically, there are four folders to be processed for DIV2K dataset.
-            DIV2K_train_HR
-            DIV2K_train_LR_bicubic/X2
-            DIV2K_train_LR_bicubic/X3
-            DIV2K_train_LR_bicubic/X4
-        After process, each sub_folder should have the same number of
-        subimages.
-        Remember to modify opt configurations according to your settings.
-    """
-
+def main_df2k():
+    # for div2k_flickr2k
     opt = {}
-    opt['n_thread'] = 20
+    opt['n_thread'] = 48
     opt['compression_level'] = 3
 
     # HR images
-    opt['input_folder'] = 'datasets/RealSR_V3/Train/2/HR'
-    opt['save_folder'] = 'datasets/RealSR_V3/Train/2/HR_sub'
+    opt['input_folder'] = 'datasets/df2k/Flickr2K_HR'
+    opt['save_folder'] = 'datasets/df2k/Flickr2K_HR_sub'
     opt['crop_size'] = 480
     opt['step'] = 240
     opt['thresh_size'] = 0
-    opt['hr'] = True
     extract_subimages(opt)
+
     # LRx2 images
-    opt['input_folder'] = 'datasets/RealSR_V3/Train/2/LR'
-    opt['save_folder'] = 'datasets/RealSR_V3/Train/2/LR_sub'
+    opt['input_folder'] = 'datasets/df2k/Flickr2K_LR_bicubic/X2'
+    opt['save_folder'] = 'datasets/df2k/Flickr2K_LR_bicubic/X2_sub'
     opt['crop_size'] = 240
     opt['step'] = 120
     opt['thresh_size'] = 0
-    opt['hr'] = False
     extract_subimages(opt)
 
+    # LRx3 images
+    opt['input_folder'] = 'datasets/df2k/Flickr2K_LR_bicubic/X3'
+    opt['save_folder'] = 'datasets/df2k/Flickr2K_LR_bicubic/X3_sub'
+    opt['crop_size'] = 160
+    opt['step'] = 80
+    opt['thresh_size'] = 0
+    extract_subimages(opt)
 
-    # # HR images
-    # opt['input_folder'] = 'datasets/RealSR_V3/Train/3/HR'
-    # opt['save_folder'] = 'datasets/RealSR_V3/Train/3/HR_sub'
-    # opt['crop_size'] = 480
-    # opt['step'] = 240
-    # opt['thresh_size'] = 0
-    # opt['hr'] = True
-    # hr = extract_subimages(opt)
-    # # LRx3 images
-    # opt['input_folder'] = 'datasets/RealSR_V3/Train/3/LR'
-    # opt['save_folder'] = 'datasets/RealSR_V3/Train/3/LR_sub'
-    # opt['crop_size'] = 160
-    # opt['step'] = 80
-    # opt['thresh_size'] = 0
-    # opt['hr'] = False
-    # extract_subimages(opt)
-
-
-    # HR images
-    # opt['input_folder'] = 'datasets/RealSR_V3/Train/4/HR'
-    # opt['save_folder'] = 'datasets/RealSR_V3/Train/4/HR_sub'
-    # opt['crop_size'] = 480
-    # opt['step'] = 240
-    # opt['thresh_size'] = 0
-    # opt['hr'] = True
-    # hr = extract_subimages(opt)
-    # # LRx4 images
-    # opt['input_folder'] = 'datasets/RealSR_V3/Train/4/LR'
-    # opt['save_folder'] = 'datasets/RealSR_V3/Train/4/LR_sub'
-    # opt['crop_size'] = 120
-    # opt['step'] = 60
-    # opt['thresh_size'] = 0
-    # opt['hr'] = False
-    # extract_subimages(opt)
+    # LRx4 images
+    opt['input_folder'] = 'datasets/df2k/Flickr2K_LR_bicubic/X4'
+    opt['save_folder'] = 'datasets/df2k/Flickr2K_LR_bicubic/X4_sub'
+    opt['crop_size'] = 120
+    opt['step'] = 60
+    opt['thresh_size'] = 0
+    extract_subimages(opt)
 
 
 def extract_subimages(opt):
@@ -114,11 +64,8 @@ def extract_subimages(opt):
     else:
         print(f'Folder {save_folder} already exists. Exit.')
         sys.exit(1)
+
     img_list = list(scandir(input_folder, full_path=True))
-    if opt['hr']:
-        img_list = [img_name for img_name in img_list if 'HR' in img_name]
-    else:
-        img_list = [img_name for img_name in img_list if 'LR' in img_name]
 
     pbar = tqdm(total=len(img_list), unit='image', desc='Extract')
     pool = Pool(opt['n_thread'])
@@ -151,10 +98,8 @@ def worker(path, opt):
     thresh_size = opt['thresh_size']
     img_name, extension = osp.splitext(osp.basename(path))
 
-    if opt['hr']:
-        img_name = img_name.replace('_HR', '')
-    else:
-        img_name = img_name.replace('_LR2', '').replace('_LR3', '').replace('_LR4', '')
+    # remove the x2, x3, x4 and x8 in the filename for DIV2K
+    img_name = img_name.replace('x2', '').replace('x3', '').replace('x4', '').replace('x8', '')
 
     img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
 
@@ -180,4 +125,4 @@ def worker(path, opt):
 
 
 if __name__ == '__main__':
-    main()
+    main_df2k()

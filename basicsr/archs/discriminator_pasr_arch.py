@@ -4,7 +4,7 @@ from basicsr.utils.registry import ARCH_REGISTRY
 
 
 @ARCH_REGISTRY.register()
-class VGGStyleDiscriminator(nn.Module):
+class VGGStyleDiscriminator_PASR(nn.Module):
     """VGG style discriminator with input size 128 x 128 or 256 x 256.
 
     It is used to train SRGAN, ESRGAN, and VideoGAN.
@@ -15,7 +15,7 @@ class VGGStyleDiscriminator(nn.Module):
     """
 
     def __init__(self, num_in_ch, num_feat, input_size=128):
-        super(VGGStyleDiscriminator, self).__init__()
+        super(VGGStyleDiscriminator_PASR, self).__init__()
         self.input_size = input_size
         assert self.input_size == 128 or self.input_size == 256, (
             f'input size must be 128 or 256, but received {input_size}')
@@ -51,7 +51,7 @@ class VGGStyleDiscriminator(nn.Module):
             self.bn5_1 = nn.BatchNorm2d(num_feat * 8, affine=True)
 
         self.linear1 = nn.Linear(num_feat * 8 * 4 * 4, 100)
-        self.linear2 = nn.Linear(100, 1)
+        self.linear2 = nn.Linear(100, 128)
 
         # activation function
         self.lrelu = nn.LeakyReLU(negative_slope=0.2, inplace=True)
@@ -86,7 +86,7 @@ class VGGStyleDiscriminator(nn.Module):
 
 def main():
     img = torch.randn((10,3,256,256))
-    net = VGGStyleDiscriminator(3, 64, input_size=128)
+    net = VGGStyleDiscriminator_PASR(3, 64, input_size=256)
     output = net(img)
     print(output.shape)
 

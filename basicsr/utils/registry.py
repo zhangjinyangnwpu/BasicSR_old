@@ -36,7 +36,6 @@ class Registry():
         self._obj_map = {}
 
     def _do_register(self, name, obj):
-        # print(self._obj_map)
         assert (name not in self._obj_map), (f"An object named '{name}' was already registered "
                                              f"in '{self._name}' registry!")
         self._obj_map[name] = obj
@@ -47,6 +46,7 @@ class Registry():
         Can be used as either a decorator or not.
         See docstring of this class for usage.
         """
+        # self._obj_map = {}
         if obj is None:
             # used as a decorator
             def deco(func_or_class):

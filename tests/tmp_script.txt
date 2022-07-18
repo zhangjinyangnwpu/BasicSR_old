@@ -24,10 +24,18 @@ PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="2" nohup python basicsr/trai
 PYTHONPATH="./:${PYTHONPATH}" CUDA_VISIBLE_DEVICES="1" python basicsr/train.py -opt options/train/PASR/train_PASR_Lx3_realsr.yml
 
 
-nohup python basicsr/train.py -opt options/train/FFC/train_FFC_ssresnet_Lx4_div2k.yml &
-
 nohup python basicsr/train.py -opt options/train/PASR/train_PASR_Lx4_realsr.yml &
 
-python basicsr/train.py -opt options/train/BitSR/train_BitSR_Lx4.yml
+nohup python basicsr/train.py -opt options/train/PASR/train_PASR_Lx4_contr_realsr.yml &
+
+CUDA_VISIBLE_DEVICES=6 nohup python basicsr/train.py -opt options/train/PASR/train_PASR_Lx4_contr_realsr.yml > realsr_x4_cont.txt &
+
+CUDA_VISIBLE_DEVICES=7 nohup python basicsr/train.py -opt options/train/PASR/train_PASR_Lx2_realsr.yml > realsr_x2.txt &
 
 CUDA_VISIBLE_DEVICES=0 ./scripts/dist_train.sh 1 options/train/PASR/train_PASR_Lx4_div2k.yml
+
+
+
+CUDA_VISIBLE_DEVICES=1 nohup python basicsr/train.py -opt options/train/FPNSR/train_FPNSR_Lx4_df2k_degrade_moqi.yml &
+
+CUDA_VISIBLE_DEVICES=1 python basicsr/train.py -opt options/train/FPNSR/train_FPNSR_Lx4_df2k_degrade_moqi.yml --debug

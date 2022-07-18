@@ -56,7 +56,7 @@ class BitConv(nn.Module):
         f_fusion = torch.cat([f_fusion,coord_feat],dim=1)
         f_fusion = self.conv_out(f_fusion)
         out = self.act(f_fusion)
-        
+
         return identity + out * self.res_scale
 
 

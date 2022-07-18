@@ -213,6 +213,7 @@ class ContrastiveLoss(nn.Module):
             feature_anchor = feature_anchor.view(feature_anchor.shape[0],-1)
             feature_pos = feature_pos.view(feature_pos.shape[0], -1)
             feature_neg = feature_neg.view(feature_neg.shape[0], -1)
+
         anchor = F.normalize(feature_anchor)
         pos = F.normalize(feature_pos)
         neg = F.normalize(feature_neg)
@@ -227,6 +228,29 @@ class ContrastiveLoss(nn.Module):
 
         del self.label_pos,self.label_neg
 
+        return self.loss_weight * loss
+
+
+@LOSS_REGISTRY.register()
+class ContrastiveLoss_v2(nn.Module):
+    def __init__(self, loss_weight=1.0, reduction='mean'):
+        super(ContrastiveLoss_v2, self).__init__()
+        if reduction not in ['none', 'mean', 'sum']:
+            raise ValueError(f'Unsupported reduction mode: {reduction}. Supported ones are: {_reduction_modes}')
+        self.loss_weight = loss_weight
+        self.reduction = reduction
+
+    def forward(self, embedding1, embedding2, is_close = True, norm = False, weight=None, **kwargs):
+        device = embedding1.device
+        if norm:
+            embedding1 = F.normalize(embedding1)
+            embedding2 = F.normalize(embedding2)
+        if is_close:
+            self.label = torch.ones(embedding1.shape[0]).to(device)
+        else:
+            self.label = torch.zeros(embedding1.shape[0]).to(device)
+        similary = F.cosine_similarity(embedding1,embedding2)
+        loss = mse_loss(similary,self.label)
         return self.loss_weight * loss
 
 @LOSS_REGISTRY.register()
