@@ -61,7 +61,7 @@ class BitConv(nn.Module):
 
 
 
-@ARCH_REGISTRY.register()
+# @ARCH_REGISTRY.register()
 class BitSR(nn.Module):
     def __init__(self,
                  num_in_ch=1,
@@ -88,8 +88,8 @@ class BitSR(nn.Module):
         return x
 
 def main():
-    net = BitSR(num_in_ch=1,num_out_ch=1,upscale = 4)
-    img = torch.randn((32,1,64,64))
+    net = BitSR(num_in_ch=24,num_out_ch=24,upscale = 4)
+    img = torch.randn((32,24,64,64))
     img_scale = net(img)
     print(img_scale.shape)
     # torchstat.stat(net,(3,64,64))

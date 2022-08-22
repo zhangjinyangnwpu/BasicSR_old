@@ -4,6 +4,7 @@ from torch.nn import functional as F
 import torchstat
 from basicsr.utils.registry import ARCH_REGISTRY
 from basicsr.archs.arch_util import Upsample
+# from .acmix_unit import ACmix
 
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels,group=1,resiudlal_ratio=1.0):
@@ -63,11 +64,11 @@ class BiFPNBlockFusion(nn.Module):
         self.residual_ratio = residual_ratio
         self.epsilon = epsilon
 
-        self.p1_td = Block_Type(feature_size*2, feature_size,group=group)
-        self.p2_td = Block_Type(feature_size*2, feature_size,group=group)
+        self.p1_td = Block_Type(feature_size*2, feature_size)
+        self.p2_td = Block_Type(feature_size*2, feature_size)
 
-        self.p2_out = Block_Type(feature_size*2, feature_size,group=group)
-        self.p3_out = Block_Type(feature_size*2, feature_size,group=group)
+        self.p2_out = Block_Type(feature_size*2, feature_size)
+        self.p3_out = Block_Type(feature_size*2, feature_size)
 
 
     def forward(self, x):
@@ -89,6 +90,7 @@ class BiFPNBlockFusion(nn.Module):
         level3_out += level3 * residual_ratio
 
         return [level1_out, level2_out, level3_out]
+
 
 @ARCH_REGISTRY.register()
 class FPNSR(nn.Module):
@@ -181,10 +183,10 @@ class FPNSR(nn.Module):
 
 def main():
     img = torch.randn((1,3,64,64)).to('cpu')
-    net = FPNSR(input_channels=3, output_channels=3, scale=2, num_layer=5,fea_dim=32).to('cpu')
-    output = net(img,True)
-    for item in output:
-        print(item.shape)
+    net = FPNSR(input_channels=3, output_channels=3, scale=4, num_layer=5,fea_dim=64).to('cpu')
+    output = net(img,False)
+    # for item in output:
+    #     print(item.shape)
     net_print = True
     if net_print:
         torchstat.stat(net,(3,64,64))
