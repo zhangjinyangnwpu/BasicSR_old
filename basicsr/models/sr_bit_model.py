@@ -84,59 +84,57 @@ class BitSRModel(BaseModel):
         self.optimizer_g = self.get_optimizer(optim_type, optim_params, **train_opt['optim_g'])
         self.optimizers.append(self.optimizer_g)
 
+    def tensor2bit(self,tensor):
+        tensor = torch.as_tensor(torch.clip(tensor*255,0,255),dtype=torch.uint8)
+        b,c,w,h = tensor.shape
+        tensor_bit = torch.zeros(size=(b,c,8,w,h),dtype=torch.bool)
+        for channel in range(c):
+            for bit_index in range(8):
+                bit_img = tensor[:,channel] & (1 << bit_index)
+                tensor_bit[:,channel, bit_index] = bit_img
+        tensor_bit = torch.as_tensor(tensor_bit,dtype=torch.float32)
+        return tensor_bit
+
     def feed_data(self, data):
-        self.lq_bit = data['lq_bit'].to(self.device)
         self.lq = data['lq'].to(self.device)
-        if 'gt_bit' in data:
-            self.gt_bit = data['gt_bit'].to(self.device)
+        self.lq_bit = self.tensor2bit(self.lq).to(self.device)
+        if 'gt' in data:
             self.gt = data['gt'].to(self.device)
+            self.gt_bit = self.tensor2bit(self.gt).to(self.device)
+
+
 
     def optimize_parameters(self, current_iter):
         loss_dict = OrderedDict()
         # pixel loss
+        l_total = 0
+        self.optimizer_g.zero_grad()
         if self.cri_pix:
-            output_list = []
-            for channel in range(3):
-                for bit_index in range(8):
-                    l_total = 0
-                    self.optimizer_g.zero_grad()
-                    lq = self.lq_bit[:,channel,bit_index].unsqueeze(1)
-                    output = self.net_g(lq)
-                    output_list.append(output)
-                    gt = self.gt_bit[:,channel,bit_index].unsqueeze(1)
-                    l_pix = self.cri_pix(output, gt)
-                    l_total += l_pix
-                    loss_dict['l_pix'+str(channel)+'_'+str(bit_index)] = l_pix
-                    l_total.backward()
-                    self.optimizer_g.step()
-                loss_dict['l_pix'] = l_total
-            self.output = bitmap2tensor(output_list)
+            b,c,bit_index,w,h = self.lq_bit.shape
+            lq_bit = self.lq_bit.view(b,-1,w,h)
+            output = self.net_g(lq_bit)
+            l_pix = self.cri_pix(output, self.gt)
+            l_total += l_pix
+            loss_dict['l_pix'] = l_pix
+        l_total.backward()
+        self.optimizer_g.step()
+        loss_dict['l_pix'] = l_total
         self.log_dict = self.reduce_loss_dict(loss_dict)
 
         if self.ema_decay > 0:
             self.model_ema(decay=self.ema_decay)
 
     def test(self):
+        b, c, bit_index, w, h = self.lq_bit.shape
+        lq_bit = self.lq_bit.view(b, -1, w, h)
         if hasattr(self, 'net_g_ema'):
             self.net_g_ema.eval()
             with torch.no_grad():
-                output_list = []
-                for channel in range(3):
-                    for bit_index in range(8):
-                        lq = self.lq_bit[:,channel,bit_index].unsqueeze(1)
-                        output = self.net_g_ema(lq)
-                        output_list.append(output)
-                self.output = bitmap2tensor(output_list)
+                self.output = self.net_g_ema(lq_bit)
         else:
             self.net_g.eval()
             with torch.no_grad():
-                output_list = []
-                for channel in range(3):
-                    for bit_index in range(8):
-                        lq = self.lq_bit[:,channel,bit_index].unsqueeze(1)
-                        output = self.net_g(lq)
-                        output_list.append(output)
-                self.output = bitmap2tensor(output_list)
+                self.output = self.net_g_ema(lq_bit)
             self.net_g.train()
 
     def dist_validation(self, dataloader, current_iter, tb_logger, save_img):
@@ -167,11 +165,10 @@ class BitSRModel(BaseModel):
             self.test()
 
             visuals = self.get_current_visuals()
-            # sr_img = tensor2img([visuals['result']])
-            sr_img = visuals['result']
+            sr_img = tensor2img([visuals['result']])
             metric_data['img'] = sr_img
             if 'gt' in visuals:
-                print(visuals['gt'].shape)
+                # print(visuals['gt'].shape)
                 gt_img = tensor2img([visuals['gt']])
                 metric_data['img2'] = gt_img
                 del self.gt
@@ -230,8 +227,7 @@ class BitSRModel(BaseModel):
     def get_current_visuals(self):
         out_dict = OrderedDict()
         out_dict['lq'] = self.lq.detach().cpu()
-        # out_dict['result'] = self.output.detach().cpu()
-        out_dict['result'] = self.output
+        out_dict['result'] = self.output.detach().cpu()
         if hasattr(self, 'gt'):
             out_dict['gt'] = self.gt.detach().cpu()
         return out_dict

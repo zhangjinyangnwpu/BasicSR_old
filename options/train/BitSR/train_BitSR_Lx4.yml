@@ -1,27 +1,24 @@
 # general settings
-name: BitSR_Lx4_f256b32_RealSR_50k_B32G1_wandb_24bits
+name: Bit_BiFPN_Lx4_DIV2K
 model_type: BitSRModel
 scale: 4
 num_gpu: 1  # set num_gpu: 0 for cpu mode
-manual_seed: 10
+manual_seed: 1
 
 # dataset and data loader settings
 datasets:
   train:
-    name: RealSR
-    type: PairedImageDatasetBit
-#    dataroot_gt: datasets/DIV2K/DIV2K_train_HR_sub
-#    dataroot_lq: datasets/DIV2K/DIV2K_train_LR_bicubic/X4_sub
+    name: DIV2K
+    type: PairedImageDataset
     # (for lmdb)
-#    dataroot_gt: datasets/DIV2K/DIV2K_train_HR_sub.lmdb
-#    dataroot_lq: datasets/DIV2K/DIV2K_train_LR_bicubic_X4_sub.lmdb
-    dataroot_gt: datasets/RealSR(V3)/All/Train/4_HR_sub.lmdb
-    dataroot_lq: datasets/RealSR(V3)/All/Train/4_LR_sub.lmdb
+    dataroot_gt: datasets/DIV2K/DIV2K_train_HR_sub
+    dataroot_lq: datasets/DIV2K/DIV2K_train_LR_bicubic/X4_sub
+
     filename_tmpl: '{}'
     io_backend:
 #      type: disk
       # (for lmdb)
-      type: lmdb
+      type: disk
 
     gt_size: 192
     use_hflip: true
@@ -29,44 +26,53 @@ datasets:
 
     # data loader
     use_shuffle: true
-    num_worker_per_gpu: 12
-    batch_size_per_gpu: 64
-    dataset_enlarge_ratio: 100
+    num_worker_per_gpu: 6
+    batch_size_per_gpu: 16
+    dataset_enlarge_ratio: 1
     prefetch_mode: ~
+
+    # degratation option
+
 
   val_0:
     name: Set5
-    type: PairedImageDatasetBit
-    dataroot_gt: datasets/Set5/GTmod12
-    dataroot_lq: datasets/Set5/LRbicx4
+    type: PairedImageDataset
+    dataroot_gt: datasets/Classical/Set5/GTmod12
+    dataroot_lq: datasets/Classical/Set5/LRbicx4
     io_backend:
       type: disk
 
   val_1:
     name: Set14
-    type: PairedImageDatasetBit
-    dataroot_gt: datasets/Set14/GTmod12
-    dataroot_lq: datasets/Set14/LRbicx4
-    io_backend:
-      type: disk
-
-  val_2:
-    name: RealSR
-    type: PairedImageDatasetBit
-    dataroot_gt: datasets/RealSR(V3)/All/Test/4
-    dataroot_lq: datasets/RealSR(V3)/All/Test/4
+    type: PairedImageDataset
+    dataroot_gt: datasets/Classical/Set14/GTmod12
+    dataroot_lq: datasets/Classical/Set14/LRbicx4
     io_backend:
       type: disk
 
 # network structures
 network_g:
-  type: BitSR
-  num_in_ch: 1
-  num_out_ch: 1
-  num_feat: 64
-  num_block: 23
-  upscale: 4
-  res_scale: 0.8
+  type: BiFPN_Bit
+  scale: 4
+  num_layers: 5
+
+
+# for gaussion degrade
+degrade:
+  flag: false
+  scale: 4
+  mode: bicubic
+  kernel_size: 21 # gaussian kernel size
+  blur_type: iso_gaussian # iso_gaussian or aniso_gaussian
+  sig: 0.0       # test with a certain value for iso_gaussian
+  sig_min: 0.2   # training 0.2 for x2, 0.2 for x3, 0.2 for x4 for iso_gaussian
+  sig_max: 2.0   # training 2.0 for x2, 3.0 for x2, 4.0 for x4 for iso_gaussian
+  lambda_1: 0.2  # test with a cetrain value for aniso_gaussian
+  lambda_2: 4.0  # test with a cetrain value for aniso_gaussian
+  theta: 0       # angle for aniso_gaussian, set with angle when testing
+  lambda_min: 0.2 # training 0.2 for x2,x3,x4 for aniso_gaussian
+  lambda_max: 4.0 # training 4.0 for x2,x3,x4 for aniso_gaussian
+  noise: 0 # random for training and testing for valiation
 
 # path
 path:
@@ -85,7 +91,7 @@ train:
 
   scheduler:
     type: MultiStepLR
-    milestones: [ 250000, 400000, 450000, 475000 ]
+    milestones: [ 100000, 200000, 300000, 400000, 500000]
     gamma: 0.5
 
   total_iter: 500000
@@ -94,9 +100,13 @@ train:
 
   # losses
   pixel_opt:
-    type: BCELoss
+    type: L1Loss
     loss_weight: 1.0
     reduction: mean
+#  contrastive_opt:
+#    type: ContrastLoss_VGG19 #ContrastLoss_VGG19 ContrastiveLoss
+#    loss_weight: 1.0
+#    reduction: mean
 
 # validation settings
 val:

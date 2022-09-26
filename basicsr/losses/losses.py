@@ -1,5 +1,6 @@
 import math
 import torch
+import torchvision.models
 from torch import autograd as autograd
 from torch import nn as nn
 from torch.nn import functional as F
@@ -7,6 +8,7 @@ from torch.nn import functional as F
 from basicsr.archs.vgg_arch import VGGFeatureExtractor
 from basicsr.utils.registry import LOSS_REGISTRY
 from .loss_util import weighted_loss
+from .vgg19 import Vgg19
 
 _reduction_modes = ['none', 'mean', 'sum']
 
@@ -155,11 +157,45 @@ class TripleLoss(nn.Module):
         return self.loss_weight * self.triple_loss(anchor, pos, neg)
 
 @LOSS_REGISTRY.register()
+class ContrastLoss_VGG19(nn.Module):
+    def __init__(self,loss_weight=1.0,reduction='mean'):
+
+        super(ContrastLoss_VGG19, self).__init__()
+        self.vgg = Vgg19().cuda()
+        self.l1 = nn.L1Loss()
+        self.weights = [1.0/32, 1.0/16, 1.0/8, 1.0/4, 1.0]
+        self.loss_weight = loss_weight
+        self.reduction = reduction
+
+    def forward(self, a, p, n):
+        a_vgg, p_vgg, n_vgg = self.vgg(a), self.vgg(p), self.vgg(n)
+        loss = 0
+        # label_pos = torch.ones(a.shape[0]).cuda()
+        # label_neg = torch.zeros(a.shape[0]).cuda()
+        d_ap, d_an = 0, 0
+        for i in range(len(a_vgg)):
+            d_ap = l1_loss(a_vgg[i], p_vgg[i].detach(),reduction = self.reduction)
+            d_an = l1_loss(a_vgg[i], n_vgg[i].detach(),reduction = self.reduction)
+            contrastive = d_ap / (d_an + 1e-7)
+            # pos_loss = self.l_mse(d_ap, label_pos)
+            # neg_loss = self.l_mse(d_an, label_neg)
+            # contrastive = pos_loss + neg_loss
+            loss += self.weights[i] * contrastive
+        return loss * self.loss_weight
+
+
+
+@LOSS_REGISTRY.register()
 class ContrastiveLoss(nn.Module):
     def __init__(self, loss_weight=1.0, reduction='mean'):
         super(ContrastiveLoss, self).__init__()
         if reduction not in ['none', 'mean', 'sum']:
             raise ValueError(f'Unsupported reduction mode: {reduction}. Supported ones are: {_reduction_modes}')
+        extarctor = torchvision.models.vgg19(pretrained=True).features
+        self.extractor = nn.Sequential(
+            extarctor,
+            nn.AdaptiveAvgPool2d((1,1)),
+        ).cuda()
 
         self.loss_weight = loss_weight
         self.reduction = reduction
@@ -169,9 +205,18 @@ class ContrastiveLoss(nn.Module):
         self.label_pos = torch.ones(anchor.shape[0]).to(device)
         self.label_neg = torch.zeros(anchor.shape[0]).to(device)
 
-        anchor = F.normalize(anchor)
-        pos = F.normalize(pos)
-        neg = F.normalize(neg)
+        with torch.no_grad():
+            feature_anchor = self.extractor(anchor)
+            feature_pos = self.extractor(pos)
+            feature_neg = self.extractor(neg)
+
+            feature_anchor = feature_anchor.view(feature_anchor.shape[0],-1)
+            feature_pos = feature_pos.view(feature_pos.shape[0], -1)
+            feature_neg = feature_neg.view(feature_neg.shape[0], -1)
+
+        anchor = F.normalize(feature_anchor)
+        pos = F.normalize(feature_pos)
+        neg = F.normalize(feature_neg)
 
         sim_pos = F.cosine_similarity(anchor,pos)
         sim_neg = F.cosine_similarity(anchor,neg)
@@ -183,6 +228,29 @@ class ContrastiveLoss(nn.Module):
 
         del self.label_pos,self.label_neg
 
+        return self.loss_weight * loss
+
+
+@LOSS_REGISTRY.register()
+class ContrastiveLoss_v2(nn.Module):
+    def __init__(self, loss_weight=1.0, reduction='mean'):
+        super(ContrastiveLoss_v2, self).__init__()
+        if reduction not in ['none', 'mean', 'sum']:
+            raise ValueError(f'Unsupported reduction mode: {reduction}. Supported ones are: {_reduction_modes}')
+        self.loss_weight = loss_weight
+        self.reduction = reduction
+
+    def forward(self, embedding1, embedding2, is_close = True, norm = False, weight=None, **kwargs):
+        device = embedding1.device
+        if norm:
+            embedding1 = F.normalize(embedding1)
+            embedding2 = F.normalize(embedding2)
+        if is_close:
+            self.label = torch.ones(embedding1.shape[0]).to(device)
+        else:
+            self.label = torch.zeros(embedding1.shape[0]).to(device)
+        similary = F.cosine_similarity(embedding1,embedding2)
+        loss = mse_loss(similary,self.label)
         return self.loss_weight * loss
 
 @LOSS_REGISTRY.register()

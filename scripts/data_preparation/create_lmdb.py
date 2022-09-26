@@ -17,35 +17,35 @@ def create_lmdb_for_div2k():
             DIV2K_train_LR_bicubic/X4_sub
         Remember to modify opt configurations according to your settings.
     """
-    # # HR images
-    # folder_path = 'datasets/DIV2K/DIV2K_train_HR_sub'
-    # lmdb_path = 'datasets/DIV2K/DIV2K_train_HR_sub.lmdb'
-    # img_path_list, keys = prepare_keys_div2k(folder_path)
-    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
-    #
-    # # LRx2 images
+    # HR images
+    folder_path = 'datasets/DIV2K/DIV2K_train_HR_sub'
+    lmdb_path = 'datasets/DIV2K/DIV2K_train_HR_sub.lmdb'
+    img_path_list, keys = prepare_keys_div2k(folder_path)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True,n_thread=16)
+
+    # LRx2 images
     # folder_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X2_sub'
-    # lmdb_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic_X2_sub.lmdb'
+    # lmdb_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X2_sub.lmdb'
     # img_path_list, keys = prepare_keys_div2k(folder_path)
-    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
-    #
-    # # LRx3 images
+    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
+
+    # LRx3 images
     # folder_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X3_sub'
-    # lmdb_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic_X3_sub.lmdb'
+    # lmdb_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X3_sub.lmdb'
     # img_path_list, keys = prepare_keys_div2k(folder_path)
-    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
-    #
-    # # LRx4 images
+    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
+
+    # LRx4 images
     # folder_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X4_sub'
-    # lmdb_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic_X4_sub.lmdb'
+    # lmdb_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X4_sub.lmdb'
     # img_path_list, keys = prepare_keys_div2k(folder_path)
-    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
 
     # LRx8 images
-    folder_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X8_sub'
-    lmdb_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic_X8_sub.lmdb'
-    img_path_list, keys = prepare_keys_div2k(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    # folder_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X8_sub'
+    # lmdb_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic_X8_sub.lmdb'
+    # img_path_list, keys = prepare_keys_div2k(folder_path)
+    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
 
 def create_lmdb_for_div2k_flickr2k():
     """Create lmdb files for DIV2K dataset.
@@ -63,25 +63,25 @@ def create_lmdb_for_div2k_flickr2k():
     folder_path = 'datasets/DIV2K_Flickr2K/HR_sub'
     lmdb_path = 'datasets/DIV2K_Flickr2K/HR_sub.lmdb'
     img_path_list, keys = prepare_keys_div2k(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
 
     # LRx2 images
     folder_path = 'datasets/DIV2K_Flickr2K/LR_bicubic/X2_sub'
     lmdb_path = 'datasets/DIV2K_Flickr2K/LR_bicubic/X2_sub.lmdb'
     img_path_list, keys = prepare_keys_div2k(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
 
     # LRx3 images
     folder_path = 'datasets/DIV2K_Flickr2K/LR_bicubic/X3_sub'
     lmdb_path = 'datasets/DIV2K_Flickr2K/LR_bicubic/X3_sub.lmdb'
     img_path_list, keys = prepare_keys_div2k(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
 
     # LRx4 images
     folder_path = 'datasets/DIV2K_Flickr2K/LR_bicubic/X4_sub'
     lmdb_path = 'datasets/DIV2K_Flickr2K/LR_bicubic/X4_sub.lmdb'
     img_path_list, keys = prepare_keys_div2k(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
 
     # LRx8 images
     # folder_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X8_sub'
@@ -112,31 +112,31 @@ def create_lmdb_for_realsr():
     folder_path = 'datasets/RealSR(V3)/All/Train/3_HR_sub'
     lmdb_path = 'datasets/RealSR(V3)/All/Train/3_HR_sub.lmdb'
     img_path_list, keys = prepare_keys_realsr(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
     #
     # # LRx2 images
     # folder_path = 'datasets/RealSR(V3)/All/Train/2_LR_sub'
     # lmdb_path = 'datasets/RealSR(V3)/All/Train/2_LR_sub.lmdb'
     # img_path_list, keys = prepare_keys_div2k(folder_path)
-    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
     #
     # # LRx3 images
     folder_path = 'datasets/RealSR(V3)/All/Train/3_LR_sub'
     lmdb_path = 'datasets/RealSR(V3)/All/Train/3_LR_sub.lmdb'
     img_path_list, keys = prepare_keys_div2k(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
     #
     # # LRx4 images
     # folder_path = 'datasets/RealSR(V3)/All/Train/4_LR_sub'
     # lmdb_path = 'datasets/RealSR(V3)/All/Train/4_LR_sub.lmdb'
     # img_path_list, keys = prepare_keys_realsr(folder_path)
-    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
 
     # LRx8 images
     # folder_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic/X8_sub'
     # lmdb_path = 'datasets/DIV2K/DIV2K_train_LR_bicubic_X8_sub.lmdb'
     # img_path_list, keys = prepare_keys_div2k(folder_path)
-    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
 
 
 def prepare_keys_realsr(folder_path):
@@ -161,37 +161,37 @@ def create_lmdb_for_drealsr():
     folder_path = 'datasets/DRealSR/x2/Train_x2/train_HR'
     lmdb_path = 'datasets/DRealSR/x2/Train_x2/train_HR.lmdb'
     img_path_list, keys = prepare_keys_drealsr(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
     #
     # # LRx2 images
     folder_path = 'datasets/DRealSR/x2/Train_x2/train_LR'
     lmdb_path = 'datasets/DRealSR/x2/Train_x2/train_LR.lmdb'
     img_path_list, keys = prepare_keys_drealsr(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
 
     # # HR x3 images  change dataset path
     folder_path = 'datasets/DRealSR/x3/Train_x3/train_HR'
     lmdb_path = 'datasets/DRealSR/x3/Train_x3/train_HR.lmdb'
     img_path_list, keys = prepare_keys_drealsr(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
     #
     # # LRx3 images
     folder_path = 'datasets/DRealSR/x3/Train_x3/train_LR'
     lmdb_path = 'datasets/DRealSR/x3/Train_x3/train_LR.lmdb'
     img_path_list, keys = prepare_keys_drealsr(folder_path)
-    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
 
     # # HR x4 images  change dataset path
     folder_path = 'datasets/DRealSR/x4/Train_x4/train_HR'
     lmdb_path = 'datasets/DRealSR/x4/Train_x4/train_HR.lmdb'
     img_path_list, keys = prepare_keys_drealsr(folder_path)
-    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
     #
     # # LRx4 images
     folder_path = 'datasets/DRealSR/x4/Train_x4/train_LR'
     lmdb_path = 'datasets/DRealSR/x4/Train_x4/train_LR.lmdb'
     img_path_list, keys = prepare_keys_drealsr(folder_path)
-    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys)
+    # make_lmdb_from_imgs(folder_path, lmdb_path, img_path_list, keys,multiprocessing_read=True)
 
 
 
@@ -306,10 +306,10 @@ def prepare_keys_vimeo90k(folder_path, train_list_path, mode):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-
     parser.add_argument(
         '--dataset',
         type=str,
+        default='div2k',
         help=("Options: 'DIV2K', 'REDS', 'Vimeo90K' 'realsr', 'drealsr' "
               'You may need to modify the corresponding configurations in codes.'))
     args = parser.parse_args()

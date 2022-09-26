@@ -1,7 +1,7 @@
 # general settings
-name: PASR_RealSR_x2_50k_20220620
-model_type: SRModel
-scale: 2
+name: PASR_RealSR_x4_50k_moqi_constractive
+model_type: PASRModel
+scale: 4
 num_gpu: 1  # set num_gpu: 0 for cpu mode
 manual_seed: 10
 
@@ -13,53 +13,53 @@ datasets:
     # (for lmdb)
 #    dataroot_gt: datasets/DIV2K/DIV2K_train_HR_sub.lmdb
 #    dataroot_lq: datasets/DIV2K/DIV2K_train_LR_bicubic_X4_sub.lmdb
-    dataroot_gt: datasets/RealSR_V3/Train/2/HR_sub.lmdb
-    dataroot_lq: datasets/RealSR_V3/Train/2/LR_sub.lmdb
+    dataroot_gt: datasets/RealSR_V3/All/Train/4_HR_sub
+    dataroot_lq: datasets/RealSR_V3/All/Train/4_LR_sub
     filename_tmpl: '{}'
     io_backend:
 #      type: disk
       # (for lmdb)
-      type: lmdb
+      type: disk
 
-    gt_size: 96
+    gt_size: 192
     use_hflip: true
     use_rot: true
 
     # data loader
     use_shuffle: true
     num_worker_per_gpu: 6
-    batch_size_per_gpu: 32
+    batch_size_per_gpu: 16
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
   val_0:
     name: Set5
     type: PairedImageDataset
-    dataroot_gt: datasets/Set5/HR
-    dataroot_lq: datasets/Set5/LR_bicubic/x2
+    dataroot_gt: datasets/Classical/Set5/GTmod12
+    dataroot_lq: datasets/Classical/Set5/LRbicx4
     io_backend:
       type: disk
 
   val_1:
     name: Set14
     type: PairedImageDataset
-    dataroot_gt: datasets/Set14/HR
-    dataroot_lq: datasets/Set14/LR_bicubic/x2
+    dataroot_gt: datasets/Classical/Set14/GTmod12
+    dataroot_lq: datasets/Classical/Set14/LRbicx4
     io_backend:
       type: disk
 
   val_2:
     name: RealSR
     type: PairedImageDataset
-    dataroot_gt: datasets/RealSR_V3/Test/2/HR
-    dataroot_lq: datasets/RealSR_V3/Test/2/LR
+    dataroot_gt: datasets/RealSR_V3/All/Test/4_HR
+    dataroot_lq: datasets/RealSR_V3/All/Test/4_LR
     io_backend:
       type: disk
 
 # network structures
 network_g:
   type: PASR
-  scale: 2
+  scale: 4
   input_channels: 3
   output_channels: 3
   num_layers: 10
@@ -69,7 +69,7 @@ network_g:
 # for gaussion degrade
 degrade:
   flag: false
-  scale: 2
+  scale: 4
   mode: bicubic
   kernel_size: 25
   blur_type: iso_gaussian
@@ -112,10 +112,10 @@ train:
     type: SmoothL1Loss
     loss_weight: 1.0
     reduction: mean
-#  contrastive_opt:
-#    type: ContrastiveLoss
-#    loss_weight: 1.0
-#    reduction: mean
+  contrastive_opt:
+   type: ContrastLoss_VGG19 # ContrastLoss_VGG19, ContrastiveLoss
+   loss_weight: 1.0
+   reduction: mean
 
 # validation settings
 val:

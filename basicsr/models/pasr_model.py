@@ -13,7 +13,7 @@ from basicsr.utils.registry import MODEL_REGISTRY
 from .base_model import BaseModel
 from basicsr.utils import SRMDPreprocessing
 
-
+# add test
 @MODEL_REGISTRY.register()
 class PASRModel(BaseModel):
     """Base SR model for single image super-resolution."""
@@ -161,17 +161,19 @@ class PASRModel(BaseModel):
         # contrastive loss
         if self.cri_contrastive:
             if self.contrastive_step < current_iter:
-                if self.opt['num_gpu'] > 1:
-                    feature_output = self.net_g.module.get_feature(self.output)
-                    feature_gt = self.net_g.module.get_feature(self.gt)
-                    lq_inter = torch.nn.functional.interpolate(self.lq,scale_factor=self.scale,mode='bicubic')
-                    feature_lq = self.net_g.module.get_feature(lq_inter)
-                else:
-                    feature_output = self.net_g.get_feature(self.output)
-                    feature_gt = self.net_g.get_feature(self.gt)
-                    lq_inter = torch.nn.functional.interpolate(self.lq,scale_factor=self.scale,mode='bicubic')
-                    feature_lq = self.net_g.get_feature(lq_inter)
-                l_contrastive = self.cri_contrastive(feature_gt,feature_output,feature_lq)
+                # if self.opt['num_gpu'] > 1:
+                #     feature_output = self.net_g.module.get_feature(self.output)
+                #     feature_gt = self.net_g.module.get_feature(self.gt)
+                #     lq_inter = torch.nn.functional.interpolate(self.lq,scale_factor=self.scale,mode='bicubic')
+                #     feature_lq = self.net_g.module.get_feature(lq_inter)
+                #
+                # else:
+                #     feature_output = self.net_g.get_feature(self.output)
+                #     feature_gt = self.net_g.get_feature(self.gt)
+                #     lq_inter = torch.nn.functional.interpolate(self.lq,scale_factor=self.scale,mode='bicubic')
+                #     feature_lq = self.net_g.get_feature(lq_inter)
+                lq_inter = torch.nn.functional.interpolate(self.lq, scale_factor=self.scale, mode='bicubic')
+                l_contrastive = self.cri_contrastive(self.output,self.gt,lq_inter)
                 l_total += l_contrastive
                 loss_dict['l_contrastive'] = l_contrastive
         # perceptual loss

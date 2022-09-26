@@ -226,9 +226,9 @@ def paired_paths_from_folder(folders, keys, filename_tmpl,name=None):
 
     input_paths = list(scandir(input_folder))
     gt_paths = list(scandir(gt_folder))
-    if name == 'RealSR':
-        input_paths = [img for img in input_paths if 'LR' in img]
-        gt_paths = [img for img in gt_paths if 'HR' in img]
+    # if name == 'RealSR':
+    #     input_paths = [img for img in input_paths if 'LR' in img]
+    #     gt_paths = [img for img in gt_paths if 'HR' in img]
     input_paths.sort()
     gt_paths.sort()
     # for v1,v2 in zip(input_paths,gt_paths):

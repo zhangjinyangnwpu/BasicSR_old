@@ -1,6 +1,8 @@
+import enum
 import torch
 from collections import OrderedDict
 from os import path as osp
+
 from tqdm import tqdm
 
 from basicsr.archs import build_network
@@ -9,29 +11,62 @@ from basicsr.metrics import calculate_metric
 from basicsr.utils import get_root_logger, imwrite, tensor2img
 from basicsr.utils.registry import MODEL_REGISTRY
 from .base_model import BaseModel
+from basicsr.utils import SRMDPreprocessing
 
-
+# add test
 @MODEL_REGISTRY.register()
-class SRModel(BaseModel):
-    """Base SR model for single image super-resolution."""
+class FPNSRModel(BaseModel):
 
     def __init__(self, opt):
-        super(SRModel, self).__init__(opt)
-
+        super(FPNSRModel, self).__init__(opt)
+        self.opt = opt
         # define network
         self.net_g = build_network(opt['network_g'])
         self.net_g = self.model_to_device(self.net_g)
         self.print_network(self.net_g)
-
+        self.scale = self.opt['network_g'].get('scale', None)
         # load pretrained models
         load_path = self.opt['path'].get('pretrain_network_g', None)
         if load_path is not None:
             param_key = self.opt['path'].get('param_key_g', 'params')
             self.load_network(self.net_g, load_path, self.opt['path'].get('strict_load_g', True), param_key)
-
+        self.contrastive_step = self.opt['train'].get('contrastive_step')
         if self.is_train:
             self.init_training_settings()
 
+        self.degrade_flag = self.opt['degrade'].get('flag', None)
+        scale = self.opt['degrade'].get('scale', None)
+        mode = self.opt['degrade'].get('mode', None)
+        kernel_size = self.opt['degrade'].get('kernel_size', None)
+        blur_type = self.opt['degrade'].get('blur_type', None)
+        sig = self.opt['degrade'].get('sig', None)
+        sig_min = self.opt['degrade'].get('sig_min', None)
+        sig_max = self.opt['degrade'].get('sig_max', None)
+        lambda_1 = self.opt['degrade'].get('lambda_1', None)
+        lambda_2 = self.opt['degrade'].get('lambda_2', None)
+        theta = self.opt['degrade'].get('theta', None)
+        lambda_min = self.opt['degrade'].get('lambda_min', None)
+        lambda_max = self.opt['degrade'].get('lambda_max', None)
+        noise = self.opt['degrade'].get('lambda_max', None)
+
+        self.degrade = SRMDPreprocessing(
+            scale=scale,
+            mode = mode,
+            kernel_size = kernel_size,
+            blur_type=blur_type,
+            sig = sig,
+            sig_min=sig_min,
+            sig_max=sig_max,
+            lambda_1 = lambda_1,
+            lambda_2 = lambda_2,
+            theta = theta,
+            lambda_min=lambda_min,
+            lambda_max=lambda_max,
+            noise=noise
+        )
+        self.train_or_val = 'train'
+        self.layer_num = int(self.opt['network_g'].get('num_layer', None))
+        self.loss_wights = [1 for _ in range(self.layer_num)]
 
     def init_training_settings(self):
         self.net_g.train()
@@ -58,6 +93,11 @@ class SRModel(BaseModel):
             self.cri_pix = build_loss(train_opt['pixel_opt']).to(self.device)
         else:
             self.cri_pix = None
+
+        if train_opt.get('contrastive_opt'):
+            self.cri_contrastive = build_loss(train_opt['contrastive_opt']).to(self.device)
+        else:
+            self.cri_contrastive = None
 
         if train_opt.get('perceptual_opt'):
             self.cri_perceptual = build_loss(train_opt['perceptual_opt']).to(self.device)
@@ -86,30 +126,42 @@ class SRModel(BaseModel):
         self.optimizers.append(self.optimizer_g)
 
     def feed_data(self, data):
-        self.lq = data['lq'].to(self.device)
-        if 'gt' in data:
-            self.gt = data['gt'].to(self.device)
+        if self.degrade_flag:
+            if 'gt' in data:
+                self.gt = data['gt'].to(self.device)
+                # logger = get_root_logger()
+                if self.train_or_val =='train':
+                    self.lq,_ = self.degrade(self.gt,random=True)
+                elif self.train_or_val =='val':
+                    self.lq,_ = self.degrade(self.gt,random=False)
+                self.lq = self.lq.to(self.device)
+        else:
+            self.lq = data['lq'].to(self.device)
+            if 'gt' in data:
+                self.gt = data['gt'].to(self.device)
 
     def optimize_parameters(self, current_iter):
         self.optimizer_g.zero_grad()
-        self.output = self.net_g(self.lq)
+        if self.is_train:
+            self.output_list = self.net_g(self.lq,True)
+            assert len(self.loss_wights) == len(self.output_list)
+            self.output = self.output_list[-1]
+        else:
+            self.output = self.net_g(self.lq,False)
 
         l_total = 0
         loss_dict = OrderedDict()
         # pixel loss
         if self.cri_pix:
-            l_pix = self.cri_pix(self.output, self.gt)
-            l_total += l_pix
-            loss_dict['l_pix'] = l_pix
-        # perceptual loss
-        if self.cri_perceptual:
-            l_percep, l_style = self.cri_perceptual(self.output, self.gt)
-            if l_percep is not None:
-                l_total += l_percep
-                loss_dict['l_percep'] = l_percep
-            if l_style is not None:
-                l_total += l_style
-                loss_dict['l_style'] = l_style
+            if self.is_train:
+                for key,(weight,output) in enumerate(zip(self.loss_wights,self.output_list)):
+                    l_pix = self.cri_pix(output, self.gt)
+                    l_total += l_pix * weight
+                    loss_dict['l_pix_'+str(key)] = l_pix
+            else:
+                l_pix = self.cri_pix(self.output, self.gt)
+                l_total += l_pix
+                loss_dict['l_pix'] = l_pix
 
         l_total.backward()
         self.optimizer_g.step()
@@ -120,15 +172,14 @@ class SRModel(BaseModel):
             self.model_ema(decay=self.ema_decay)
 
     def test(self):
-        print(self.lq.shape)
         if hasattr(self, 'net_g_ema'):
+            self.net_g_ema.eval()
             with torch.no_grad():
-                self.net_g_ema.eval()
-                self.output = self.net_g_ema(self.lq)
+                self.output = self.net_g_ema(self.lq,False)
         else:
+            self.net_g.eval()
             with torch.no_grad():
-                self.net_g.eval()
-                self.output = self.net_g(self.lq)
+                self.output = self.net_g(self.lq,False)
             self.net_g.train()
 
     def dist_validation(self, dataloader, current_iter, tb_logger, save_img):
@@ -136,6 +187,7 @@ class SRModel(BaseModel):
             self.nondist_validation(dataloader, current_iter, tb_logger, save_img)
 
     def nondist_validation(self, dataloader, current_iter, tb_logger, save_img):
+        self.train_or_val = 'val'
         dataset_name = dataloader.dataset.opt['name']
         with_metrics = self.opt['val'].get('metrics') is not None
         use_pbar = self.opt['val'].get('pbar', False)
@@ -169,6 +221,8 @@ class SRModel(BaseModel):
             # tentative for out of GPU memory
             del self.lq
             del self.output
+            for item in self.output_list:
+                del item
             torch.cuda.empty_cache()
 
             if save_img:
@@ -201,6 +255,8 @@ class SRModel(BaseModel):
                 self._update_best_metric_result(dataset_name, metric, self.metric_results[metric], current_iter)
 
             self._log_validation_metric_values(current_iter, dataset_name, tb_logger)
+
+        self.train_or_val = 'train'
 
     def _log_validation_metric_values(self, current_iter, dataset_name, tb_logger):
         log_str = f'Validation {dataset_name}\n'
