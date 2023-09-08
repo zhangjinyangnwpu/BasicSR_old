@@ -244,8 +244,8 @@ def main():
     img = torch.randn((1,3,192,192))
     net = PASR(input_channels=3, output_channels=3, scale=2, num_layers=5,fea_dim=32)
     y = net.get_feature(img)
-    # output = net(img)
-    print(y.shape)
+    output = net(img)
+    print(y.shape,output.shape)
 
     # print(net)
     # torchstat.stat(net,(3,64,64))
